@@ -1,1 +1,1 @@
-# Prisma---Gest-o-e-Educa-o-Financeira
+# Prisma (Gestão e Educação Financeira)
