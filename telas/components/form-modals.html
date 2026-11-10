@@ -1,0 +1,405 @@
+<!-- Modal Receita -->
+<div class="modal-overlay" id="receitaModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="receitaModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 id="receitaModalTitle">Nova Receita</h3>
+        <p>Cadastre uma nova entrada no seu controle financeiro.</p>
+      </div>
+      <button type="button" class="modal-close" id="closeReceitaModal" aria-label="Fechar modal">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <form id="receitaForm" class="modal-form">
+      <input type="hidden" id="receitaEditIndex" value="" />
+      <div class="form-field">
+        <label for="receitaOrigem">Origem</label>
+        <input type="text" id="receitaOrigem" placeholder="Ex: Salário, Freelance, Investimentos" required />
+      </div>
+      <div class="form-field">
+        <label for="receitaDescricao">Descrição</label>
+        <input type="text" id="receitaDescricao" placeholder="Ex: Projeto website" required />
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="receitaConta">Conta</label>
+          <input type="text" id="receitaConta" placeholder="Ex: Nubank" required />
+        </div>
+        <div class="form-field">
+          <label for="receitaValor">Valor (R$)</label>
+          <input type="text" inputmode="decimal" id="receitaValor" step="0.01" min="0" placeholder="0,00" required />
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="receitaData">Data</label>
+          <input type="date" id="receitaData" required />
+        </div>
+        <div class="form-field">
+          <label for="receitaStatus">Status</label>
+          <select id="receitaStatus" required>
+            <option value="paid">Recebido</option>
+            <option value="pending">Pendente</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelReceitaBtn">Cancelar</button>
+        <button type="submit" class="btn primary" id="submitReceitaBtn">Adicionar Receita</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Despesa -->
+<div class="modal-overlay" id="despesaModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="despesaModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 id="despesaModalTitle">Nova Despesa</h3>
+        <p>Cadastre um novo gasto no seu controle financeiro.</p>
+      </div>
+      <button type="button" class="modal-close" id="closeDespesaModal" aria-label="Fechar modal">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <form id="despesaForm" class="modal-form">
+      <input type="hidden" id="despesaEditIndex" value="" />
+      <div class="form-field">
+        <label for="despesaCategoria">Categoria</label>
+        <input type="text" id="despesaCategoria" placeholder="Ex: Alimentação, Moradia, Transporte" required />
+      </div>
+      <div class="form-field">
+        <label for="despesaDescricao">Descrição</label>
+        <input type="text" id="despesaDescricao" placeholder="Ex: Supermercado" required />
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="despesaConta">Conta</label>
+          <input type="text" id="despesaConta" placeholder="Ex: Nubank" required />
+        </div>
+        <div class="form-field">
+          <label for="despesaValor">Valor (R$)</label>
+          <input type="text" inputmode="decimal" id="despesaValor" step="0.01" min="0" placeholder="0,00" required />
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="despesaData">Data</label>
+          <input type="date" id="despesaData" required />
+        </div>
+        <div class="form-field">
+          <label for="despesaStatus">Status</label>
+          <select id="despesaStatus" required>
+            <option value="paid">Pago</option>
+            <option value="pending">Pendente</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="despesaFormaPagamento">Forma de pagamento</label>
+          <select id="despesaFormaPagamento" required>
+            <option value="pix">PIX</option>
+            <option value="debito">Débito</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="credito">Cartão de crédito</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+            <option value="outro">Outra</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="despesaTipoPagamento">Pagamento</label>
+          <select id="despesaTipoPagamento" required>
+            <option value="avista">À vista</option>
+            <option value="parcelado">Parcelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-grid" id="parcelamentoFields" hidden>
+        <div class="form-field">
+          <label for="despesaParcelas">Quantidade de parcelas</label>
+          <input type="number" id="despesaParcelas" min="2" max="360" step="1" placeholder="Ex: 8" />
+        </div>
+        <div class="form-field">
+          <label for="despesaValorParcelaPreview">Valor de cada parcela</label>
+          <input type="text" id="despesaValorParcelaPreview" placeholder="R$ 0,00" readonly />
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="despesaPrioridade">Prioridade</label>
+        <select id="despesaPrioridade" required>
+          <option value="baixa">Baixa</option>
+          <option value="media" selected>Média</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelDespesaBtn">Cancelar</button>
+        <button type="submit" class="btn primary" id="submitDespesaBtn">Adicionar Despesa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Conta -->
+<div class="modal-overlay" id="contaModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="contaModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 id="contaModalTitle">Nova Conta</h3>
+        <p>Adicione uma nova conta bancária ao seu painel.</p>
+      </div>
+      <button type="button" class="modal-close" id="closeContaModal" aria-label="Fechar modal">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <form id="contaForm" class="modal-form">
+      <input type="hidden" id="contaEditIndex" value="" />
+      <div class="form-field">
+        <label for="contaNome">Nome da conta</label>
+        <input type="text" id="contaNome" placeholder="Ex: Nubank, Itaú, C6" required />
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="contaBanco">Banco</label>
+          <input type="text" id="contaBanco" placeholder="Ex: Nubank" required />
+        </div>
+        <div class="form-field">
+          <label for="contaSaldo">Saldo inicial (R$)</label>
+          <input type="text" inputmode="decimal" id="contaSaldo" step="0.01" min="0" placeholder="0,00" required />
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="contaNumero">Número / final</label>
+          <input type="text" id="contaNumero" placeholder="Ex: 4521" required />
+        </div>
+        <div class="form-field">
+          <label for="contaTipo">Tipo</label>
+          <select id="contaTipo" required>
+            <option value="nubank">Nubank</option>
+            <option value="itau">Itaú</option>
+            <option value="corretora">Corretora</option>
+            <option value="default">Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelContaBtn">Cancelar</button>
+        <button type="submit" class="btn primary" id="submitContaBtn">Adicionar Conta</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Cartão -->
+<div class="modal-overlay" id="cartaoModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cartaoModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 id="cartaoModalTitle">Novo Cartão</h3>
+        <p>Adicione um cartão de crédito ou débito. Escolha entre Standard, Blue, Black, Platinum, Rose ou Titanium.</p>
+      </div>
+      <button type="button" class="modal-close" id="closeCartaoModal" aria-label="Fechar modal">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <form id="cartaoForm" class="modal-form">
+      <input type="hidden" id="cartaoEditIndex" value="" />
+      <div class="form-field">
+        <label for="cartaoTitular">Nome no Cartão</label>
+        <input type="text" id="cartaoTitular" placeholder="Ex: MATEUS SILVA" required />
+      </div>
+      <div class="form-field">
+        <label for="cartaoBanco">Banco Emissor</label>
+        <select id="cartaoBanco" required>
+          <optgroup label="Bancos Brasileiros">
+            <option value="nubank">Nubank</option>
+            <option value="itau">Itaú</option>
+            <option value="bradesco">Bradesco</option>
+            <option value="santander">Santander</option>
+            <option value="bb">Banco do Brasil</option>
+            <option value="caixa">Caixa Econômica</option>
+            <option value="inter">Banco Inter</option>
+            <option value="pagbank">PagBank</option>
+            <option value="pan">Banco Pan</option>
+            <option value="c6">C6 Bank</option>
+            <option value="original">Banco Original</option>
+            <option value="sicoob">Sicoob</option>
+            <option value="sicredi">Sicredi</option>
+          </optgroup>
+          <optgroup label="Bancos Internacionais">
+            <option value="american_express">American Express</option>
+            <option value="visa">Visa</option>
+            <option value="mastercard">Mastercard</option>
+            <option value="discover">Discover</option>
+            <option value="hsbc">HSBC</option>
+            <option value="citibank">Citibank</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="cartaoFinal">Final (4 dígitos)</label>
+          <input type="text" id="cartaoFinal" placeholder="Ex: 4521" maxlength="4" required />
+        </div>
+        <div class="form-field">
+          <label for="cartaoValidade">Validade (MM/AA)</label>
+          <input type="text" id="cartaoValidade" placeholder="Ex: 07/28" maxlength="5" required />
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="cartaoEstilo">Plano do Cartão</label>
+        <select id="cartaoEstilo">
+          <option value="default">Prisma Gold / Standard</option>
+          <option value="alt">Prisma Cyan / Blue</option>
+          <option value="black">Prisma Black / Premium</option>
+          <option value="platinum">Prisma Platinum / Exclusive</option>
+          <option value="rose">Prisma Rose / Pink</option>
+          <option value="titanium">Prisma Titanium / Metal</option>
+        </select>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="cartaoLimite">Limite total de crédito (R$)</label>
+          <input type="text" inputmode="decimal" id="cartaoLimite" placeholder="0,00" required />
+        </div>
+        <div class="form-field">
+          <label for="cartaoDiaVencimento">Dia de vencimento da fatura</label>
+          <input type="number" id="cartaoDiaVencimento" min="1" max="28" placeholder="Ex: 10" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelCartaoBtn">Cancelar</button>
+        <button type="submit" class="btn primary" id="submitCartaoBtn">Adicionar Cartão</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Meta -->
+<div class="modal-overlay" id="metaModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="metaModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 id="metaModalTitle">Nova Meta</h3>
+        <p>Defina um novo objetivo financeiro.</p>
+      </div>
+      <button type="button" class="modal-close" id="closeMetaModal" aria-label="Fechar modal">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <form id="metaForm" class="modal-form">
+      <input type="hidden" id="metaEditIndex" value="" />
+      <div class="form-field">
+        <label for="metaNome">Nome da Meta</label>
+        <input type="text" id="metaNome" placeholder="Ex: Comprar Carro" required />
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="metaAtual">Valor Atual (R$)</label>
+          <input type="text" inputmode="decimal" id="metaAtual" step="0.01" min="0" placeholder="0,00" required />
+        </div>
+        <div class="form-field">
+          <label for="metaAlvo">Valor Alvo (R$)</label>
+          <input type="text" inputmode="decimal" id="metaAlvo" step="0.01" min="0" placeholder="0,00" required />
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="form-field">
+          <label for="metaAno">Ano de Conclusão</label>
+          <input type="number" id="metaAno" min="2024" max="2100" placeholder="2026" required />
+        </div>
+        <div class="form-field">
+          <label for="metaIcon">Ícone / Tema</label>
+          <select id="metaIcon">
+            <option value="car|default">Carro (Gold)</option>
+            <option value="plane|cyan">Viagem (Cyan)</option>
+            <option value="shield|purple">Reserva (Purple)</option>
+            <option value="home|red">Casa (Red)</option>
+            <option value="target|default">Objetivo Geral</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelMetaBtn">Cancelar</button>
+        <button type="submit" class="btn primary" id="submitMetaBtn">Adicionar Meta</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Criar/Editar Perfil -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal-card profile-modal">
+    <div class="modal-header">
+      <h3 id="profileModalTitle">Novo Perfil</h3>
+      <button class="modal-close" id="closeProfileModal"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="profileForm" class="profile-form">
+        <input type="hidden" id="profileId" />
+        
+        <div class="form-field">
+          <label for="profileName">Nome Completo *</label>
+          <input type="text" id="profileName" placeholder="Seu nome completo" required />
+        </div>
+        
+        <div class="form-field">
+          <label for="profileEmail">E-mail *</label>
+          <input type="email" id="profileEmail" placeholder="seu@email.com" required />
+        </div>
+        
+        <div class="form-field">
+          <label for="profileType">Tipo de Pessoa *</label>
+          <select id="profileType" required>
+            <option value="fisica">Pessoa Física (CPF)</option>
+            <option value="juridica">Pessoa Jurídica (CNPJ)</option>
+          </select>
+        </div>
+        
+        <div class="form-field">
+          <label for="profileDoc" id="profileDocLabel">CPF *</label>
+          <input type="text" id="profileDoc" placeholder="000.000.000-00" required />
+        </div>
+        
+        <div class="form-field">
+          <label for="profilePassword">Senha *</label>
+          <div class="password-field">
+            <input type="password" id="profilePassword" placeholder="Mínimo 6 caracteres" required minlength="8" />
+            <button type="button" class="password-toggle-btn" data-target="profilePassword" aria-label="Mostrar senha">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-field">
+          <label for="profileConfirmPassword">Confirmar Senha *</label>
+          <div class="password-field">
+            <input type="password" id="profileConfirmPassword" placeholder="Digite a senha novamente" required minlength="8" />
+            <button type="button" class="password-toggle-btn" data-target="profileConfirmPassword" aria-label="Mostrar senha">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-field">
+          <label for="profileSaldo">Saldo Inicial (R$)</label>
+          <input type="text" inputmode="decimal" id="profileSaldo" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        
+        <div class="form-field">
+          <label for="profileSalario">Salário Mensal (R$)</label>
+          <input type="text" inputmode="decimal" id="profileSalario" step="0.01" min="0" placeholder="0.00" />
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" id="cancelProfileBtn">Cancelar</button>
+      <button class="btn primary" id="saveProfileBtn"><i data-lucide="save"></i> Salvar Perfil</button>
+    </div>
+  </div>
+</div>
