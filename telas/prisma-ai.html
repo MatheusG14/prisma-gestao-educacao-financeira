@@ -1,0 +1,205 @@
+<!-- ============ PRISMA AI ============ -->
+<section class="section active" id="prisma-ai">
+  <div class="card ai-main-card fade-in">
+    <!-- ÁREA A: CABEÇALHO INTELIGENTE COMPACTO -->
+    <div class="ai-smart-header">
+      <div class="ai-brand-group">
+        <div class="ai-brand-avatar">
+          <img src="assets/images/logo-mark.png" alt="Logo Prisma AI" class="ai-brand-logo-img" width="34" height="34" decoding="async" />
+        </div>
+        <div>
+          <div class="ai-title-row">
+            <h2>Prisma AI</h2>
+            <span class="status-live"><span class="pulse"></span> Online</span>
+          </div>
+          <p class="ai-subtitle">Consultor financeiro inteligente baseado em seus dados reais.</p>
+        </div>
+      </div>
+      <div class="ai-header-controls">
+        <div class="ai-period-selector" id="aiPeriodSelector" role="group" aria-label="Período de Análise">
+          <button type="button" class="ai-period-btn" data-period="7d">7d</button>
+          <button type="button" class="ai-period-btn active" data-period="30d">30d</button>
+          <button type="button" class="ai-period-btn" data-period="3m">3m</button>
+          <button type="button" class="ai-period-btn" data-period="6m">6m</button>
+          <button type="button" class="ai-period-btn" data-period="1y">1a</button>
+          <button type="button" class="ai-period-btn" data-period="all">Tudo</button>
+        </div>
+        <button class="btn secondary btn-sm" id="aiPdfBtn" title="Exportar relatório executivo em PDF">
+          <i data-lucide="file-text"></i> PDF
+        </button>
+        <button class="btn secondary btn-sm" id="aiResetBtn" title="Reiniciar análise e limpar conversa">
+          <i data-lucide="refresh-ccw"></i> Reiniciar
+        </button>
+        <button class="btn secondary btn-sm" id="aiToggleCockpitBtn" title="Visualizar Cockpit de Saúde e Gráficos">
+          <i data-lucide="bar-chart-2"></i> Cockpit
+        </button>
+        <button class="btn primary btn-sm ai-analyze-btn" id="aiAnalyze" title="Executar análise completa das finanças" style="display:none;">
+          <i data-lucide="sparkles"></i> Analisar Finanças
+        </button>
+      </div>
+    </div>
+
+    <!-- PAINEL RETRÁTIL DO COCKPIT & GRÁFICOS (SOB DEMANDA) -->
+    <div class="ai-cockpit-drawer" id="aiCockpitDrawer" style="display: none;">
+      <!-- Score banner -->
+      <div class="ai-score-banner" id="aiScoreBanner">
+        <div class="ai-score-left">
+          <div class="ai-score-circle" id="aiScoreCircle">
+            <svg viewBox="0 0 36 36" class="ai-score-chart">
+              <path class="ai-score-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="ai-score-circle-val" id="aiScoreCirclePath" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div class="ai-score-number" id="aiScoreNumber">--</div>
+          </div>
+          <div class="ai-score-meta">
+            <div class="ai-score-title">
+              <span>Saúde Financeira do Período</span>
+              <span class="ai-score-badge" id="aiScoreBadge">Aguardando Análise</span>
+            </div>
+            <p class="ai-score-desc" id="aiScoreDesc">Índice calculado com base em receitas, gastos essenciais e capacidade de poupança.</p>
+          </div>
+        </div>
+        <div class="ai-score-quick-metrics">
+          <div class="ai-score-metric">
+            <span class="label">Taxa Poupança</span>
+            <span class="val" id="aiScorePoupVal">--%</span>
+          </div>
+          <div class="ai-score-metric">
+            <span class="label">Essenciais</span>
+            <span class="val" id="aiScoreEssVal">--%</span>
+          </div>
+          <div class="ai-score-metric">
+            <span class="label">Economia Potencial</span>
+            <span class="val positive" id="aiScorePotVal">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs Grid -->
+      <div class="ai-kpi-grid" id="aiKpiGrid">
+        <div class="ai-kpi-card" id="aiKpiReceitas">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="arrow-up-right"></i> Receitas</span><span class="ai-kpi-tag confirmed">Real</span></div>
+          <div class="ai-kpi-val positive" id="aiValReceitas">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubReceitas">No período</div>
+        </div>
+        <div class="ai-kpi-card" id="aiKpiDespesas">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="arrow-down-right"></i> Despesas</span><span class="ai-kpi-tag confirmed">Real</span></div>
+          <div class="ai-kpi-val negative" id="aiValDespesas">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubDespesas">Gastos totais</div>
+        </div>
+        <div class="ai-kpi-card" id="aiKpiSaldo">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="wallet"></i> Saldo</span><span class="ai-kpi-tag confirmed">Real</span></div>
+          <div class="ai-kpi-val" id="aiValSaldo">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubSaldo">Disponível</div>
+        </div>
+        <div class="ai-kpi-card" id="aiKpiPotencial">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="trending-up"></i> Economia</span><span class="ai-kpi-tag estimated">Estimativa</span></div>
+          <div class="ai-kpi-val positive" id="aiValPotencial">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubPotencial">Sem sobreposição</div>
+        </div>
+        <div class="ai-kpi-card" id="aiKpiMeta">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="target"></i> Plano</span><span class="ai-kpi-tag goal">Ativo</span></div>
+          <div class="ai-kpi-val highlight" id="aiValMeta">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubMeta">0 metas ativas</div>
+        </div>
+        <div class="ai-kpi-card" id="aiKpiRealizada">
+          <div class="ai-kpi-header"><span class="ai-kpi-label"><i data-lucide="check-circle-2"></i> Realizada</span><span class="ai-kpi-tag verified" id="aiTagRealizada">Comprovada</span></div>
+          <div class="ai-kpi-val positive" id="aiValRealizada">R$ 0,00</div>
+          <div class="ai-kpi-sub" id="aiSubRealizada">Redução efetiva</div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="ai-charts-grid" style="margin-top:1rem;">
+        <div class="ai-chart-card">
+          <div class="ai-chart-header">
+            <h4><i data-lucide="pie-chart"></i> Gastos por Categoria</h4>
+            <span class="text-muted" id="aiCatChartSubtitle">Distribuição</span>
+          </div>
+          <div class="ai-chart-container"><canvas id="aiCategoryChart"></canvas></div>
+        </div>
+        <div class="ai-chart-card">
+          <div class="ai-chart-header">
+            <h4><i data-lucide="bar-chart-3"></i> Comparativo: Atual vs Com Plano</h4>
+            <span class="text-muted" id="aiCompChartSubtitle">Projeção</span>
+          </div>
+          <div class="ai-chart-container"><canvas id="aiComparisonChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÁREA C: AÇÕES INTELIGENTES (5 CATEGORIAS VISUAIS COMPACTAS) -->
+    <div class="ai-smart-actions-container">
+      <div class="ai-smart-actions-grid" id="aiSmartActionsGrid">
+        <button type="button" class="ai-smart-action-btn" data-ai-action="gastos" data-question="analisar-gastos" id="btnActionAnalisar">
+          <i data-lucide="sparkles"></i>
+          <span>1. Analisar meus gastos</span>
+        </button>
+        <button type="button" class="ai-smart-action-btn" data-ai-action="economizar" data-question="como-economizar" id="btnActionEconomizar">
+          <i data-lucide="scissors"></i>
+          <span>2. Como posso economizar?</span>
+        </button>
+        <button type="button" class="ai-smart-action-btn" data-ai-action="investimentos" data-question="avaliar-investimentos" id="btnActionInvestimentos">
+          <i data-lucide="trending-up"></i>
+          <span>3. Avaliar meus investimentos</span>
+        </button>
+        <button type="button" class="ai-smart-action-btn" data-ai-action="planejar" data-question="planejar-financas" id="btnActionPlanejar">
+          <i data-lucide="target"></i>
+          <span>4. Planejar minhas finanças</span>
+        </button>
+        <button type="button" class="ai-smart-action-btn" data-ai-action="relatorio" data-question="gerar-relatorio" id="btnActionRelatorio">
+          <i data-lucide="file-text"></i>
+          <span>5. Gerar relatório financeiro</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ÁREA D: ÁREA PRINCIPAL DE INTERAÇÃO CONVERSACIONAL -->
+    <div class="ai-conversational-workspace">
+      <div class="ai-chat" id="aiChat" aria-live="polite">
+        <!-- ÁREA B: SAUDAÇÃO PERSONALIZADA -->
+        <div class="ai-msg bot ai-greeting-msg" id="aiGreetingMessage">
+          <div class="ai-avatar">
+            <img src="assets/images/logo-mark.png" alt="Prisma AI" width="22" height="22" />
+          </div>
+          <div class="bubble">
+            <p class="ai-greeting-title">Olá! Vamos analisar sua vida financeira?</p>
+            <p class="ai-greeting-desc">Posso ajudar você a entender seus gastos, identificar oportunidades e tomar decisões financeiras melhores.</p>
+            <p class="ai-greeting-hint">Clique em uma das <strong>Ações Inteligentes</strong> acima ou envie uma mensagem direta abaixo.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicador de Processamento / Digitação -->
+      <div class="ai-typing-indicator" id="aiTypingIndicator" style="display: none;">
+        <div class="ai-avatar"><img src="assets/images/logo-mark.png" alt="Prisma AI" width="18" height="18" /></div>
+        <div class="typing-bubble">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+      </div>
+
+      <!-- Chips de Perguntas Rápidas Complementares -->
+      <div class="ai-quick-questions" id="aiQuickQuestions">
+        <button type="button" class="ai-quick-btn" data-question="Onde posso cortar gastos?"><i data-lucide="scissors"></i> Onde cortar gastos?</button>
+        <button type="button" class="ai-quick-btn" data-question="Como está minha taxa de poupança?"><i data-lucide="shield-check"></i> Minha poupança</button>
+        <button type="button" class="ai-quick-btn" data-question="Tenho assinaturas desnecessárias?"><i data-lucide="repeat"></i> Assinaturas ativas</button>
+        <button type="button" class="ai-quick-btn" data-question="Resumo das minhas finanças"><i data-lucide="pie-chart"></i> Resumo executivo</button>
+      </div>
+
+      <!-- Barra de Entrada Fixa e Acessível (Android Friendly) -->
+      <div class="ai-input-wrap">
+        <div class="ai-input">
+          <input type="text" id="aiInput" placeholder="Pergunte à Prisma AI sobre seus gastos, receitas ou investimentos..." aria-label="Digite sua mensagem" autocomplete="off" />
+          <button class="btn primary" id="aiSend" aria-label="Enviar mensagem"><i data-lucide="send"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPATIBILIDADE SILENCIOSA / ELEMENTOS SECUNDÁRIOS -->
+    <div id="aiTabPane_recs" style="display:none;"><div id="aiRecommendationsList"></div><div id="aiPlanContainer"></div></div>
+    <div id="aiTabPane_analytics" style="display:none;"></div>
+    <div id="aiTabPane_chat" style="display:none;"></div>
+  </div>
+</section>

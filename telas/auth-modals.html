@@ -1,0 +1,223 @@
+<!-- Modal de Cadastro -->
+  <div class="registration-overlay" id="registrationModal" style="display: none;">
+    <div class="registration-container">
+      <div class="registration-content">
+        <div class="registration-header">
+          <div class="registration-logo">
+            <img src="assets/images/logo-mark.png" alt="Prisma" class="registration-logo-img" loading="lazy" width="56" height="64" decoding="async" />
+          </div>
+          <h1 class="registration-title" id="registrationTitle">Crie sua conta</h1>
+          <p class="registration-subtitle" id="registrationSubtitle">Comece sua jornada financeira inteligente</p>
+        </div>
+
+        <form id="registrationForm" class="registration-form">
+          <div class="form-field">
+            <label for="regName">Nome completo</label>
+            <input type="text" id="regName" name="name" placeholder="Seu nome" required autocomplete="name" autofocus />
+          </div>
+          <div class="form-field">
+            <label for="regEmail">E-mail</label>
+            <input type="email" id="regEmail" name="email" placeholder="seu@email.com" required autocomplete="email" />
+          </div>
+          <div class="form-field">
+            <label for="regPassword">Senha</label>
+            <div class="password-field">
+              <input type="password" id="regPassword" name="password" placeholder="••••••••" required minlength="8" autocomplete="new-password" />
+              <button type="button" class="password-toggle-btn" data-target="regPassword" aria-label="Mostrar senha">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="regConfirmPassword">Confirmar senha</label>
+            <div class="password-field">
+              <input type="password" id="regConfirmPassword" name="confirmPassword" placeholder="••••••••" required minlength="8" autocomplete="new-password" />
+              <button type="button" class="password-toggle-btn" data-target="regConfirmPassword" aria-label="Mostrar senha">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="registration-submit-btn">
+            <i data-lucide="user-plus"></i>
+            Cadastrar
+          </button>
+          <p class="welcome-skip">Pressione <kbd>Enter</kbd> ou clique para cadastrar</p>
+        </form>
+
+        <div class="registration-footer">
+          <p class="registration-terms">Ao cadastrar-se, você concorda com nossos termos de uso</p>
+          <p class="registration-switch">Já tem uma conta? <a href="#" id="switchToLogin">Faça login</a></p>
+        </div>
+      </div>
+
+      <div class="registration-decoration">
+        <div class="registration-orb orb-1"></div>
+        <div class="registration-orb orb-2"></div>
+        <div class="registration-orb orb-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Login -->
+  <div class="login-overlay" id="loginModal" style="display: none;">
+    <div class="login-container">
+      <div class="login-content">
+        <div class="login-header">
+          <div class="login-logo">
+            <img src="assets/images/logo-mark.png" alt="Prisma" class="login-logo-img" loading="lazy" width="56" height="64" decoding="async" />
+          </div>
+          <h1 class="login-title">Bem-vindo de volta!</h1>
+          <p class="login-subtitle">Faça login para continuar</p>
+        </div>
+
+        <form id="loginForm" class="login-form">
+          <div class="form-field">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" name="email" placeholder="seu@email.com" required autocomplete="email" autofocus />
+          </div>
+          <div class="form-field">
+            <label for="loginPassword">Senha</label>
+            <div class="password-field">
+              <input type="password" id="loginPassword" name="password" placeholder="••••••••" required minlength="8" autocomplete="current-password" />
+              <button type="button" class="password-toggle-btn" data-target="loginPassword" aria-label="Mostrar senha">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="login-submit-btn">
+            <i data-lucide="log-in"></i>
+            Entrar
+          </button>
+          <button type="button" class="auth-link-button" id="forgotPasswordBtn">Esqueci minha senha</button>
+          <p class="welcome-skip">Pressione <kbd>Enter</kbd> ou clique para entrar</p>
+        </form>
+
+        <div class="existing-profiles-section" id="existingProfilesSection" style="display: none;">
+          <div class="existing-profiles-divider">
+            <span>ou</span>
+          </div>
+          <button class="existing-profiles-btn" id="showExistingProfilesBtn">
+            <i data-lucide="users"></i>
+            Fazer login em conta existente
+          </button>
+          <div class="existing-profiles-list" id="existingProfilesList" style="display: none;">
+            <!-- Perfis existentes serão listados aqui -->
+          </div>
+        </div>
+
+        <div class="login-footer">
+          <p class="login-switch">Não tem uma conta? <a href="#" id="switchToRegister">Cadastre-se</a></p>
+        </div>
+      </div>
+
+      <div class="login-decoration">
+        <div class="login-orb orb-1"></div>
+        <div class="login-orb orb-2"></div>
+        <div class="login-orb orb-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-overlay" id="resetPasswordModal" style="display:none">
+    <div class="login-container">
+      <div class="login-content">
+        <div class="login-header"><div class="login-logo"><img src="assets/images/logo-mark.png" alt="Prisma" class="login-logo-img" loading="lazy" width="56" height="64" decoding="async"></div><h1 class="login-title" id="resetTitle">Recuperar acesso</h1><p class="login-subtitle" id="resetSubtitle">Enviaremos instruções para o e-mail informado.</p></div>
+        <form id="forgotPasswordForm" class="login-form">
+          <div class="form-field"><label for="forgotEmail">E-mail</label><input type="email" id="forgotEmail" required autocomplete="email" placeholder="seu@email.com"></div>
+          <button type="submit" class="login-submit-btn"><i data-lucide="mail"></i>Enviar instruções</button>
+        </form>
+        <form id="resetPasswordForm" class="login-form" style="display:none">
+          <div class="form-field">
+            <label for="resetPassword">Nova senha</label>
+            <div class="password-field">
+              <input type="password" id="resetPassword" minlength="8" required autocomplete="new-password">
+              <button type="button" class="password-toggle-btn" data-target="resetPassword" aria-label="Mostrar senha">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="resetPasswordConfirm">Confirmar senha</label>
+            <div class="password-field">
+              <input type="password" id="resetPasswordConfirm" minlength="8" required autocomplete="new-password">
+              <button type="button" class="password-toggle-btn" data-target="resetPasswordConfirm" aria-label="Mostrar senha">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="login-submit-btn"><i data-lucide="key-round"></i>Redefinir senha</button>
+        </form>
+        <p class="login-switch"><a href="#" id="backToLoginFromReset">Voltar para o login</a></p>
+      </div><div class="login-decoration"><div class="login-orb orb-1"></div><div class="login-orb orb-2"></div><div class="login-orb orb-3"></div></div>
+    </div>
+  </div>
+
+  
+<!-- Tela de Boas-Vindas -->
+  <div class="welcome-overlay" id="welcomeScreen" style="display: none;">
+    <div class="welcome-container">
+      <div class="welcome-content">
+        <div class="welcome-logo">
+          <div class="welcome-logo-icon">
+            <img src="assets/images/logo-mark.png" alt="Prisma" class="welcome-logo-img" width="72" height="82" fetchpriority="high" decoding="async" />
+          </div>
+        </div>
+        
+        <div class="welcome-text">
+          <h1 class="welcome-title">
+            <span class="welcome-gradient">Bem-vindo ao</span>
+            <span class="welcome-brand">Prisma</span>
+          </h1>
+          <p class="welcome-subtitle">Sua gestão financeira inteligente começa aqui</p>
+        </div>
+
+        <div class="welcome-features">
+          <div class="welcome-feature">
+            <div class="feature-icon">
+              <i data-lucide="wallet"></i>
+            </div>
+            <div class="feature-text">
+              <h4>Controle Total</h4>
+              <p>Gerencie receitas, despesas e contas em um só lugar</p>
+            </div>
+          </div>
+          
+          <div class="welcome-feature">
+            <div class="feature-icon">
+              <i data-lucide="trending-up"></i>
+            </div>
+            <div class="feature-text">
+              <h4>Investimentos</h4>
+              <p>Acompanhe seus investimentos e metas financeiras</p>
+            </div>
+          </div>
+          
+          <div class="welcome-feature">
+            <div class="feature-icon">
+              <i data-lucide="bot"></i>
+            </div>
+            <div class="feature-text">
+              <h4>IA Inteligente</h4>
+              <p>Receba insights personalizados com Prisma AI</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-actions">
+          <button class="welcome-start-btn" id="welcomeStartBtn">
+            <i data-lucide="rocket"></i>
+            Começar Agora
+          </button>
+          <p class="welcome-skip">Pressione <kbd>Enter</kbd> ou clique para começar</p>
+        </div>
+      </div>
+
+      <div class="welcome-decoration">
+        <div class="welcome-orb orb-1"></div>
+        <div class="welcome-orb orb-2"></div>
+        <div class="welcome-orb orb-3"></div>
+      </div>
+    </div>
+  </div>

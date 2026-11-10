@@ -1,0 +1,608 @@
+<!-- ============ DASHBOARD ============ -->
+<section class="section active" id="dashboard">
+
+  <!-- Saudação personalizada com boas-vindas e pílula discreta de insight -->
+  <div class="dash-welcome-row" id="dashWelcomeRow">
+    <div class="dash-welcome-text">
+      <h1 class="dash-welcome-title" id="dashWelcomeTitle">Bem-vindo</h1>
+      <p class="dash-welcome-sub" id="dashWelcomeSub">Veja como está sua vida financeira hoje.</p>
+    </div>
+    <!-- Insight Discreto Prisma Pill -->
+    <div class="dash-insight-discreet-pill" id="dashInsight" role="button" tabindex="0" title="Ver análise detalhada no Centro Financeiro">
+      <i data-lucide="sparkles"></i>
+      <span id="dashInsightText">—</span>
+    </div>
+  </div>
+
+  <!-- CONTAINER EM DUAS COLUNAS: PRINCIPAL (ESQUERDA) E LATERAL (DIREITA) -->
+  <div class="dash-grid-layout">
+    
+    <!-- ÁREA PRINCIPAL (ESQUERDA): Indicadores essenciais, cards de resumo e informações prioritárias -->
+    <div class="dash-main-area">
+
+  <!-- BLOCO 1 — Resumo financeiro (4 KPI cards padronizados, sólidos e corporativos) -->
+  <div class="dash-overview" id="dashOverview">
+    <div class="stat-cards dash-kpi-row">
+
+      <!-- ======= CARD 1: PATRIMÔNIO LÍQUIDO ======= -->
+      <div class="card stat-card fade-in" data-kpi="networth" title="Ativos − passivos">
+        <div class="stat-header">
+          <span class="stat-icon green">
+            <i data-lucide="landmark"></i>
+          </span>
+          <span class="stat-badge badge-neutral" id="dashBadgeNetWorth">
+            <i data-lucide="minus"></i> —
+          </span>
+        </div>
+        <p class="stat-label">Patrimônio Líquido</p>
+        <h2 class="stat-value" id="dashNetWorth">R$ 0,00</h2>
+        <p class="stat-detail" id="dashNetWorthDetail">Ativos − passivos</p>
+      </div>
+
+      <!-- ======= CARD 2: FLUXO DE CAIXA ======= -->
+      <div class="card stat-card fade-in" data-kpi="cashflow" title="Receitas − despesas">
+        <div class="stat-header">
+          <span class="stat-icon cyan" id="economiaIcon">
+            <i data-lucide="arrow-left-right"></i>
+          </span>
+          <span class="stat-badge badge-neutral" id="economiaBadge">
+            <i data-lucide="minus"></i> 0%
+          </span>
+        </div>
+        <p class="stat-label" id="economiaLabel">Fluxo de Caixa</p>
+        <h2 class="stat-value" id="economiaValue">R$ 0,00</h2>
+        <p class="stat-detail" id="economiaDetail">Receitas − despesas</p>
+      </div>
+
+      <!-- ======= CARD 3: INVESTIMENTOS ======= -->
+      <div class="card stat-card fade-in" data-kpi="invested" title="Valor atual da carteira">
+        <div class="stat-header">
+          <span class="stat-icon purple">
+            <i data-lucide="trending-up"></i>
+          </span>
+          <span class="stat-badge badge-neutral" id="dashBadgeInvest">
+            <i data-lucide="minus"></i> —
+          </span>
+        </div>
+        <p class="stat-label">Investimentos</p>
+        <h2 class="stat-value" id="dashInvested">R$ 0,00</h2>
+        <p class="stat-detail" id="dashInvestedDetail">Valor atual da carteira</p>
+      </div>
+
+      <!-- ======= CARD 4: PRISMA SCORE ======= -->
+      <div class="card stat-card fade-in dash-score-card" data-kpi="score" title="Indicativo educacional">
+        <div class="stat-header">
+          <span class="stat-icon amber">
+            <i data-lucide="shield-check"></i>
+          </span>
+          <span class="stat-badge badge-neutral" id="dashBadgeScore">Score</span>
+        </div>
+        <p class="stat-label">Prisma Score</p>
+        <!-- Ring SVG animado para pontuação financeira -->
+        <div id="dashScoreRingWrap" style="display:none;" aria-hidden="true">
+          <svg class="score-ring-svg" viewBox="0 0 56 56" aria-hidden="true">
+            <circle class="score-ring-track" cx="28" cy="28" r="22"/>
+            <circle class="score-ring-arc" id="dashScoreArc" cx="28" cy="28" r="22"
+              stroke="#FBBF24"
+              stroke-dasharray="0 138.23"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="score-ring-label">
+            <span class="score-num" id="dashScoreValue">—</span>
+            <span class="score-class" id="dashScoreDetail">Indicativo</span>
+          </div>
+        </div>
+        <!-- Fallback text -->
+        <h2 class="stat-value" id="dashScoreValueText" style="display:none;">—</h2>
+        <p class="stat-detail" id="dashScoreDetailText" style="display:none;">Indicativo educacional</p>
+      </div>
+
+    </div>
+
+    <!-- Alertas legados (quando relevantes) -->
+    <div class="dash-alerts" id="dashAlerts" hidden>
+      <h3 class="dash-alerts-title"><i data-lucide="alert-triangle"></i> Atenção</h3>
+      <ul id="dashAlertsList"></ul>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       GRAND CARD CENTRALIZADOR: VISÃO FINANCEIRA
+       ========================================================================= -->
+  <div class="card grand-card-financial fade-in" id="grandCardFinancial">
+    <div class="grand-card-header">
+      <div class="grand-card-brand">
+        <div class="grand-card-icon">
+          <i data-lucide="layout-grid"></i>
+        </div>
+        <div>
+          <div class="grand-card-title-row">
+            <h2 class="grand-card-title">Visão Financeira</h2>
+            <span class="grand-card-live-badge"><span class="pulse"></span> 4 módulos ativos</span>
+          </div>
+          <p class="grand-card-subtitle">Todos os seus indicadores financeiros em um só lugar.</p>
+        </div>
+      </div>
+      <div class="grand-card-quick-kpis">
+        <div class="grand-kpi-pill" title="Saldo atual das receitas menos despesas">
+          <span class="kpi-pill-label">Saldo do Fluxo:</span>
+          <strong class="kpi-pill-val" id="grandKpiCashflow">R$ 0,00</strong>
+        </div>
+        <div class="grand-kpi-pill" title="Status da Central de Monitoramento">
+          <span class="status-indicator-dot" id="grandMonitoringDot"></span>
+          <span class="kpi-pill-label">Monitoramento:</span>
+          <strong class="kpi-pill-val" id="grandMonitoringStatus">Ativo</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRADE DE ACESSO COMPACTO AOS 4 MÓDULOS FINANCEIROS -->
+    <div class="grand-modules-grid" id="grandModulesGrid" role="group" aria-label="Módulos da Visão Financeira">
+      
+      <!-- MÓDULO 1: FLUXO DE CAIXA -->
+      <article class="grand-module-item" data-open-module="cashflow" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Abrir modal de Fluxo de Caixa">
+        <div class="module-item-head">
+          <div class="module-icon-wrap cyan">
+            <i data-lucide="line-chart"></i>
+          </div>
+          <span class="module-badge">Histórico 12m</span>
+        </div>
+        <div class="module-item-body">
+          <h3 class="module-title">Fluxo de Caixa</h3>
+          <p class="module-desc">Evolução mensal comparativa de receitas, despesas e saldo líquido.</p>
+        </div>
+        <div class="module-item-footer">
+          <div class="module-preview-data">
+            <span class="preview-label">Desempenho:</span>
+            <strong class="preview-val positive" id="grandModuleCashflowVal">R$ 0,00</strong>
+          </div>
+          <div class="module-action-indicator">
+            <span>Consultar</span>
+            <i data-lucide="arrow-up-right"></i>
+          </div>
+        </div>
+      </article>
+
+      <!-- MÓDULO 2: DISTRIBUIÇÃO -->
+      <article class="grand-module-item" data-open-module="distribution" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Abrir modal de Distribuição">
+        <div class="module-item-head">
+          <div class="module-icon-wrap purple">
+            <i data-lucide="pie-chart"></i>
+          </div>
+          <span class="module-badge">Gastos &amp; Receitas</span>
+        </div>
+        <div class="module-item-body">
+          <h3 class="module-title">Distribuição</h3>
+          <p class="module-desc">Divisão percentual e valores consolidados por categorias financeiras.</p>
+        </div>
+        <div class="module-item-footer">
+          <div class="module-preview-data">
+            <span class="preview-label">Categorias:</span>
+            <strong class="preview-val" id="grandModuleDistVal">Consolidadas</strong>
+          </div>
+          <div class="module-action-indicator">
+            <span>Explorar</span>
+            <i data-lucide="arrow-up-right"></i>
+          </div>
+        </div>
+      </article>
+
+      <!-- MÓDULO 3: CENTRAL DE MONITORAMENTO -->
+      <article class="grand-module-item" data-open-module="monitoring" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Abrir modal da Central de Monitoramento">
+        <div class="module-item-head">
+          <div class="module-icon-wrap green">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <span class="module-badge" id="grandModuleAlertsBadge">0 alertas</span>
+        </div>
+        <div class="module-item-body">
+          <h3 class="module-title">Central de Monitoramento</h3>
+          <p class="module-desc">Acompanhamento contínuo de previsões, alertas e inteligência Prisma.</p>
+        </div>
+        <div class="module-item-footer">
+          <div class="module-preview-data">
+            <span class="preview-label">Status:</span>
+            <strong class="preview-val" id="grandModuleMonitoringVal">Operação normal</strong>
+          </div>
+          <div class="module-action-indicator">
+            <span>Abrir Central</span>
+            <i data-lucide="arrow-up-right"></i>
+          </div>
+        </div>
+      </article>
+
+      <!-- MÓDULO 4: GASTOS E RECEITAS -->
+      <article class="grand-module-item" data-open-module="income-expense" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Abrir modal de Gastos e Receitas">
+        <div class="module-item-head">
+          <div class="module-icon-wrap amber">
+            <i data-lucide="arrow-left-right"></i>
+          </div>
+          <span class="module-badge" id="grandModuleFlowRatioBadge">0% comprometido</span>
+        </div>
+        <div class="module-item-body">
+          <h3 class="module-title">Gastos e Receitas</h3>
+          <p class="module-desc">Balanço proporcional de entradas, saídas e atalhos de lançamento rápido.</p>
+        </div>
+        <div class="module-item-footer">
+          <div class="module-preview-data">
+            <span class="preview-label">Saldo Atual:</span>
+            <strong class="preview-val" id="grandModuleIncomeExpenseVal">R$ 0,00</strong>
+          </div>
+          <div class="module-action-indicator">
+            <span>Gerenciar</span>
+            <i data-lucide="arrow-up-right"></i>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAIS INDEPENDENTES DOS 4 MÓDULOS
+       ========================================================================= -->
+
+  <!-- MODAL 1: FLUXO DE CAIXA -->
+  <div class="financial-module-modal" id="modalModuleCashflow" role="dialog" aria-modal="true" aria-labelledby="modalCashflowTitle" style="display: none;">
+    <div class="financial-modal-backdrop" data-close-module></div>
+    <div class="financial-modal-dialog">
+      <div class="financial-modal-header">
+        <div class="financial-modal-title-group">
+          <div class="financial-modal-icon cyan">
+            <i data-lucide="line-chart"></i>
+          </div>
+          <div>
+            <h3 class="financial-modal-title" id="modalCashflowTitle">Fluxo de Caixa</h3>
+            <p class="financial-modal-subtitle">Evolução mensal comparativa de receitas, despesas e saldo líquido</p>
+          </div>
+        </div>
+        <button type="button" class="financial-modal-close" data-close-module aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="financial-modal-body">
+        <div class="card chart-card chart-card-interactive fade-in" id="cashflowChartCard">
+          <div class="card-head chart-head-clickable" id="toggleCashflowChart" role="button" tabindex="0" aria-expanded="true" aria-label="Expandir gráfico de Fluxo de Caixa">
+            <div class="chart-head-info">
+              <div class="chart-head-icon"><i data-lucide="line-chart"></i></div>
+              <h3>Fluxo de Caixa <span class="chart-head-badge">12m</span></h3>
+            </div>
+            <div class="chart-head-actions">
+              <div class="legend" id="cashflowLegend">
+                <span class="legend-item"><i class="dot green-dot"></i> Receitas</span>
+                <span class="legend-item"><i class="dot red-dot"></i> Despesas</span>
+              </div>
+              <button type="button" class="btn secondary btn-sm btn-chart-toggle" id="btnToggleCashflow" style="display:none;">
+                <span>Ver Gráfico</span>
+                <i data-lucide="chevron-down"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-expandable-body" id="cashflowChartBody" style="display: block;">
+            <div class="chart-actions-bar">
+              <select class="range-select" aria-label="Período do fluxo de caixa">
+                <option>Últimos 12 meses</option>
+                <option>Últimos 6 meses</option>
+                <option>Últimos 30 dias</option>
+              </select>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="cashflowChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: DISTRIBUIÇÃO -->
+  <div class="financial-module-modal" id="modalModuleDistribution" role="dialog" aria-modal="true" aria-labelledby="modalDistributionTitle" style="display: none;">
+    <div class="financial-modal-backdrop" data-close-module></div>
+    <div class="financial-modal-dialog">
+      <div class="financial-modal-header">
+        <div class="financial-modal-title-group">
+          <div class="financial-modal-icon purple">
+            <i data-lucide="pie-chart"></i>
+          </div>
+          <div>
+            <h3 class="financial-modal-title" id="modalDistributionTitle">Distribuição Financeira</h3>
+            <p class="financial-modal-subtitle">Composição e percentuais detalhados por categorias de gastos e receitas</p>
+          </div>
+        </div>
+        <button type="button" class="financial-modal-close" data-close-module aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="financial-modal-body">
+        <div class="card chart-card fade-in" id="pieChartCard">
+          <div class="card-head pie-card-head">
+            <div class="card-title-group">
+              <div class="card-head-icon"><i data-lucide="pie-chart"></i></div>
+              <h3>Distribuição</h3>
+            </div>
+            <div class="segmented-control" role="tablist" aria-label="Alternar gráfico de distribuição">
+              <button type="button" class="segmented-btn active" id="btnPieExpenses" role="tab" aria-selected="true">
+                <i data-lucide="arrow-up-right"></i> Gastos
+              </button>
+              <button type="button" class="segmented-btn" id="btnPieIncome" role="tab" aria-selected="false">
+                <i data-lucide="arrow-down-left"></i> Receitas
+              </button>
+            </div>
+          </div>
+
+          <!-- Conteúdo Gastos -->
+          <div class="pie-tab-content active" id="pieTabExpenses">
+            <div class="pie-wrap">
+              <canvas id="pieChart"></canvas>
+            </div>
+            <div class="category-list" id="categoryList"></div>
+          </div>
+
+          <!-- Conteúdo Receitas -->
+          <div class="pie-tab-content" id="pieTabIncome" style="display: none;">
+            <div class="pie-wrap">
+              <canvas id="incomePieChart"></canvas>
+            </div>
+            <div class="category-list" id="incomeCategoryList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: CENTRAL DE MONITORAMENTO -->
+  <div class="financial-module-modal" id="modalModuleMonitoring" role="dialog" aria-modal="true" aria-labelledby="modalMonitoringTitle" style="display: none;">
+    <div class="financial-modal-backdrop" data-close-module></div>
+    <div class="financial-modal-dialog">
+      <div class="financial-modal-header">
+        <div class="financial-modal-title-group">
+          <div class="financial-modal-icon green">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <div>
+            <h3 class="financial-modal-title" id="modalMonitoringTitle">Central de Monitoramento</h3>
+            <p class="financial-modal-subtitle">Inteligência, alertas em tempo real e acompanhamento proativo de fluxo</p>
+          </div>
+        </div>
+        <button type="button" class="financial-modal-close" data-close-module aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="financial-modal-body">
+        <div class="card dash-monitoring-card monitoring-command-center fade-in" id="dashMonitoringCard" role="region" aria-labelledby="dashMonitoringTitle">
+          
+          <header class="monitoring-header command-center-header" id="dashMonitoringToggle" role="button" tabindex="0" aria-expanded="true" aria-controls="dashMonitoringContent" aria-label="Central de Monitoramento Financeiro">
+            <div class="monitoring-head-left">
+              <div class="monitoring-icon-wrap" id="monitoringStatusWrap">
+                <i data-lucide="shield-check" id="monitoringMainIcon"></i>
+                <span class="status-pulse-dot dot-ok" id="monitoringPulseDot"></span>
+              </div>
+              <div class="monitoring-head-text">
+                <div class="monitoring-title-row">
+                  <span class="monitoring-kicker"><i data-lucide="sparkles"></i> Central de Inteligência</span>
+                  <h3 id="dashMonitoringTitle">Central de Monitoramento</h3>
+                  <span class="monitoring-badge" id="monitoringPendingBadge">0 pendentes</span>
+                </div>
+                <p class="monitoring-subtitle" id="monitoringBriefSummary">Acompanhamento inteligente da sua vida financeira</p>
+              </div>
+            </div>
+            <div class="monitoring-head-right">
+              <button type="button" class="btn-monitoring-toggle" id="btnToggleMonitoring" aria-label="Alternar exibição da central" style="display:none;">
+                <span class="toggle-text" id="monitoringToggleText">Expandir</span>
+                <i data-lucide="chevron-down" class="monitoring-chevron" id="monitoringChevron"></i>
+              </button>
+            </div>
+          </header>
+
+          <div class="monitoring-expandable command-center-body" id="dashMonitoringContent" style="display: block;">
+            
+            <!-- Painel de Visão Geral (4 quadrantes) -->
+            <div class="monitoring-overview-grid" aria-label="Resumo de indicadores da Central">
+              <div class="overview-metric-card" id="cardHealthStatus">
+                <div class="metric-icon-box status-box">
+                  <i data-lucide="activity"></i>
+                </div>
+                <div class="metric-data">
+                  <span class="metric-label">Situação Geral</span>
+                  <strong class="metric-val m-pill-val health-ok" id="mHealthStatus">Estável</strong>
+                  <span class="metric-hint">Saúde e liquidez</span>
+                </div>
+              </div>
+
+              <div class="overview-metric-card" id="cardActiveAlerts">
+                <div class="metric-icon-box alert-box">
+                  <i data-lucide="bell-ring"></i>
+                </div>
+                <div class="metric-data">
+                  <span class="metric-label">Alertas Ativos</span>
+                  <strong class="metric-val m-pill-val" id="mActiveAlertsCount">0</strong>
+                  <span class="metric-hint">Pendências e avisos</span>
+                </div>
+              </div>
+
+              <div class="overview-metric-card" id="cardInsightsCount">
+                <div class="metric-icon-box insight-box">
+                  <i data-lucide="lightbulb"></i>
+                </div>
+                <div class="metric-data">
+                  <span class="metric-label">Insights Prisma</span>
+                  <strong class="metric-val m-pill-val" id="mInsightsCount">0</strong>
+                  <span class="metric-hint">Análises de inteligência</span>
+                </div>
+              </div>
+
+              <div class="overview-metric-card" id="cardLastSync">
+                <div class="metric-icon-box clock-box">
+                  <i data-lucide="clock"></i>
+                </div>
+                <div class="metric-data">
+                  <span class="metric-label">Atualização</span>
+                  <strong class="metric-val m-pill-val muted" id="mLastUpdated">Hoje</strong>
+                  <span class="metric-hint">Tempo real</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Banner Prioritário -->
+            <div class="monitoring-priority-banner command-priority-block" id="mPriorityBanner" style="display: none;" role="alert">
+              <div class="priority-banner-icon">
+                <i data-lucide="alert-triangle"></i>
+              </div>
+              <div class="priority-banner-content">
+                <strong>Atenção Prioritária Necessária</strong>
+                <span id="mPriorityBannerText">Receita pendente ou atrasada requer atenção imediata</span>
+              </div>
+            </div>
+
+            <!-- Seletor de Seções Internas -->
+            <div class="monitoring-section-tabs" role="tablist" aria-label="Módulos da Central de Monitoramento">
+              <button type="button" class="m-tab-btn active" id="mTabBtnAlerts" role="tab" aria-selected="true" aria-controls="mTabAlerts">
+                <i data-lucide="bell"></i>
+                <span>Alertas &amp; Notificações</span>
+                <span class="tab-counter" id="mAlertsTabCounter">0</span>
+              </button>
+              <button type="button" class="m-tab-btn" id="mTabBtnInsights" role="tab" aria-selected="false" aria-controls="mTabInsights">
+                <i data-lucide="sparkles"></i>
+                <span>Inteligência Financeira</span>
+                <span class="tab-counter" id="mInsightsTabCounter">0</span>
+              </button>
+            </div>
+
+            <!-- Seção Alertas -->
+            <section class="monitoring-tab-pane active" id="mTabAlerts" role="tabpanel" aria-labelledby="mTabBtnAlerts">
+              <div class="monitoring-pane-head command-pane-head">
+                <div class="pane-title-group">
+                  <span class="m-pane-title">Entradas &amp; Vencimentos</span>
+                  <span class="m-pane-sub">Acompanhamento contínuo de previsões e fluxo</span>
+                </div>
+                <div class="pane-action-group">
+                  <button type="button" class="btn-text-action" id="mDismissAllAlerts" title="Marcar todos os alertas como lidos">
+                    <i data-lucide="check-check"></i>
+                    <span>Marcar lidos</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="monitoring-quick-filters" role="group" aria-label="Filtro rápido de alertas">
+                <button type="button" class="quick-filter-chip active" data-filter="all">Todos</button>
+                <button type="button" class="quick-filter-chip" data-filter="unread">Não lidos</button>
+                <button type="button" class="quick-filter-chip" data-filter="urgent">Críticos</button>
+              </div>
+
+              <div class="monitoring-items-list command-alerts-list" id="mRevenueAlertsList"></div>
+            </section>
+
+            <!-- Seção Inteligência Financeira -->
+            <section class="monitoring-tab-pane" id="mTabInsights" role="tabpanel" aria-labelledby="mTabBtnInsights" style="display: none;">
+              <div class="monitoring-pane-head command-pane-head">
+                <div class="pane-title-group">
+                  <span class="m-pane-title">Inteligência Financeira</span>
+                  <span class="m-pane-sub">Recomendações e tendências detectadas pelo Prisma AI</span>
+                </div>
+                <a href="#" class="m-pane-link" data-section="centro-financeiro" title="Ver cockpit analítico detalhado">
+                  <span>Centro Financeiro</span>
+                  <i data-lucide="arrow-right"></i>
+                </a>
+              </div>
+
+              <div class="monitoring-items-list command-insights-list" id="mFinancialInsightsList"></div>
+            </section>
+
+            <!-- Footer do Monitoramento -->
+            <footer class="monitoring-footer-status">
+              <div class="footer-status-left">
+                <span class="status-indicator-dot"></span>
+                <span class="status-text">Monitoramento ativo em segundo plano</span>
+              </div>
+              <div class="footer-status-right">
+                <a href="#" class="footer-link-action" data-section="relatorios">
+                  <i data-lucide="file-text"></i> Relatórios
+                </a>
+              </div>
+            </footer>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: GASTOS E RECEITAS -->
+  <div class="financial-module-modal" id="modalModuleIncomeExpense" role="dialog" aria-modal="true" aria-labelledby="modalIncomeExpenseTitle" style="display: none;">
+    <div class="financial-modal-backdrop" data-close-module></div>
+    <div class="financial-modal-dialog">
+      <div class="financial-modal-header">
+        <div class="financial-modal-title-group">
+          <div class="financial-modal-icon amber">
+            <i data-lucide="arrow-left-right"></i>
+          </div>
+          <div>
+            <h3 class="financial-modal-title" id="modalIncomeExpenseTitle">Gastos e Receitas</h3>
+            <p class="financial-modal-subtitle">Balanço operacional de entradas, saídas e atalhos rápidos de lançamento</p>
+          </div>
+        </div>
+        <button type="button" class="financial-modal-close" data-close-module aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="financial-modal-body">
+        <div class="card dash-income-expense-card fade-in" id="dashIncomeExpenseCard">
+          <div class="card-head">
+            <div class="card-title-group">
+              <div class="card-head-icon"><i data-lucide="arrow-left-right"></i></div>
+              <h3>Gastos e Receitas</h3>
+            </div>
+            <div class="card-actions">
+              <span class="stat-badge" id="dashFlowRatioBadge">0% comprometido</span>
+            </div>
+          </div>
+
+          <div class="dash-flow-metrics">
+            <div class="dash-flow-col income-side">
+              <div class="flow-header">
+                <span class="flow-dot green"></span>
+                <span class="flow-label">Receitas</span>
+              </div>
+              <div class="flow-val positive" id="dashIncomeTotal">R$ 0,00</div>
+              <div class="flow-sub" id="dashIncomeCount">0 entradas</div>
+            </div>
+
+            <div class="flow-divider-vertical"></div>
+
+            <div class="dash-flow-col expense-side">
+              <div class="flow-header">
+                <span class="flow-dot red"></span>
+                <span class="flow-label">Gastos</span>
+              </div>
+              <div class="flow-val negative" id="dashExpenseTotal">R$ 0,00</div>
+              <div class="flow-sub" id="dashExpenseCount">0 saídas</div>
+            </div>
+          </div>
+
+          <!-- Barra comparativa proporcional -->
+          <div class="dash-flow-bar-wrap">
+            <div class="flow-bar-labels">
+              <span id="flowIncomePercent">50%</span>
+              <span class="flow-bar-center-label" id="flowNetBalance">Saldo: R$ 0,00</span>
+              <span id="flowExpensePercent">50%</span>
+            </div>
+            <div class="flow-progress-bar">
+              <div class="flow-bar-fill-income" id="flowBarIncome" style="width: 50%;"></div>
+              <div class="flow-bar-fill-expense" id="flowBarExpense" style="width: 50%;"></div>
+            </div>
+          </div>
+
+          <!-- Atalhos rápidos para adicionar lançamentos reais -->
+          <div class="dash-flow-actions">
+            <button type="button" class="btn btn-outline-sm" data-action="add-receita">
+              <i data-lucide="plus"></i> Adicionar Receita
+            </button>
+            <button type="button" class="btn btn-outline-sm" data-action="add-despesa">
+              <i data-lucide="plus"></i> Adicionar Despesa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

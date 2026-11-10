@@ -1,0 +1,231 @@
+<!-- ============ CARTEIRA DE ATIVOS ============ -->
+<section class="section active" id="carteira-ativos">
+  <div class="section-heading carteira-ativos-heading">
+    <div>
+      <div class="section-eyebrow"><i data-lucide="briefcase-business"></i> PRISMA INVEST · GESTÃO PATRIMONIAL</div>
+      <h2>Carteira de Ativos</h2>
+      <p>Consolidação patrimonial, distribuição por classe e rentabilidade em tempo real.</p>
+    </div>
+    <div class="section-heading-actions">
+      <button class="btn secondary" id="btnVoltarInvestimentos"><i data-lucide="arrow-left"></i> Investimentos</button>
+      <button class="btn secondary btn-sm" id="btnCarteiraRelatorioPdf" title="Gerar PDF"><i data-lucide="file-text"></i> PDF</button>
+      <button class="btn secondary btn-sm" id="btnCarteiraRelatorioCsv" title="Exportar CSV"><i data-lucide="download"></i> CSV</button>
+      <button class="btn primary" id="addInvestimentoBtnCarteira"><i data-lucide="plus"></i> Aplicar ativo</button>
+    </div>
+  </div>
+
+  <!-- NÍVEL 1: RESUMO PATRIMONIAL COMPACTO -->
+  <div class="card carteira-summary-card fade-in" id="investimentosPortfolioCard">
+    <div class="carteira-kpis" id="carteiraKpis">
+      <div class="carteira-kpi primary-kpi">
+        <span class="kpi-label"><i data-lucide="wallet"></i> Patrimônio Total</span>
+        <span class="kpi-value highlight" id="portfolioTotalProjetado">R$ 0,00</span>
+        <span class="kpi-sub">Valor de mercado</span>
+      </div>
+      <div class="carteira-kpi">
+        <span class="kpi-label"><i data-lucide="coins"></i> Total Investido</span>
+        <span class="kpi-value" id="portfolioTotalInvestido">R$ 0,00</span>
+        <span class="kpi-sub">Custo de aquisição</span>
+      </div>
+      <div class="carteira-kpi">
+        <span class="kpi-label"><i data-lucide="trending-up"></i> Resultado Financeiro</span>
+        <span class="kpi-value positive" id="portfolioTotalLucro">R$ 0,00</span>
+        <span class="kpi-sub" id="portfolioLucroSub">Lucro / Prejuízo</span>
+      </div>
+      <div class="carteira-kpi">
+        <span class="kpi-label"><i data-lucide="percent"></i> Rentabilidade Acumulada</span>
+        <span class="kpi-value positive" id="portfolioRentabilidade">+0,00%</span>
+        <div class="kpi-mini-period">
+          <span>Mês: <strong id="portfolioRentMes">+0,00%</strong></span>
+          <span>Ano: <strong id="portfolioRentAno">+0,00%</strong></span>
+        </div>
+      </div>
+      <div class="carteira-kpi">
+        <span class="kpi-label"><i data-lucide="layers"></i> Total de Ativos</span>
+        <span class="kpi-value" id="portfolioQtdInvestimentos">0</span>
+        <span class="kpi-sub">Posições ativas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NÍVEL 2: DISTRIBUIÇÃO DOS INVESTIMENTOS -->
+  <div class="card carteira-distribution-card fade-in">
+    <div class="card-head carteira-dist-head">
+      <div>
+        <h3><i data-lucide="pie-chart"></i> Distribuição dos Investimentos</h3>
+        <p class="text-muted">Alocação por classe, instituição custodiante e ativo individual.</p>
+      </div>
+      <div class="div-mode-toggle" id="divModeToggle">
+        <button class="filter-chip active" data-div-mode="tipo">Por classe</button>
+        <button class="filter-chip" data-div-mode="instituicao">Instituição</button>
+        <button class="filter-chip" data-div-mode="ativo">Ativo</button>
+      </div>
+    </div>
+    <div class="carteira-distribution-body">
+      <div class="portfolio-chart-wrap">
+        <canvas id="portfolioChart" height="210"></canvas>
+      </div>
+      <div class="portfolio-legend" id="portfolioLegend"></div>
+    </div>
+  </div>
+
+  <!-- NÍVEL 4: FILTROS E ORGANIZAÇÃO -->
+  <div class="carteira-toolbar card">
+    <div class="carteira-filters" id="carteiraFilters">
+      <button class="filter-chip active" data-filter="todos">Todos</button>
+      <button class="filter-chip" data-filter="renda-fixa">Renda fixa</button>
+      <button class="filter-chip" data-filter="acoes">Ações</button>
+      <button class="filter-chip" data-filter="fiis">FIIs</button>
+      <button class="filter-chip" data-filter="etfs">ETFs</button>
+      <button class="filter-chip" data-filter="fundos">Fundos</button>
+      <button class="filter-chip" data-filter="criptomoedas">Criptomoedas</button>
+      <button class="filter-chip" data-filter="outros">Outros</button>
+    </div>
+    <div class="carteira-toolbar-right">
+      <div class="search-wrap">
+        <i data-lucide="search"></i>
+        <input type="search" id="carteiraSearch" placeholder="Buscar por ticker, nome ou instituição..." aria-label="Buscar investimento" autocomplete="off" />
+      </div>
+      <select id="carteiraSort" class="carteira-sort" aria-label="Ordenar">
+        <option value="valor-desc">Maior valor</option>
+        <option value="rent-desc">Maior rentabilidade</option>
+        <option value="lucro-desc">Maior lucro</option>
+        <option value="data-desc">Mais recente</option>
+        <option value="data-asc">Mais antigo</option>
+        <option value="nome-asc">Nome A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- NÍVEL 3: LISTA DE ATIVOS PROFISSIONAL E PADRONIZADA -->
+  <div class="card carteira-assets-section fade-in">
+    <div class="card-head carteira-assets-head">
+      <div>
+        <h3><i data-lucide="list"></i> Posições da Carteira</h3>
+        <p class="text-muted">Clique em qualquer ativo para abrir o painel detalhado com histórico, preço médio e evolução.</p>
+      </div>
+    </div>
+    <div class="ativos-grid" id="investimentosBody" aria-live="polite"></div>
+  </div>
+
+  <!-- FERRAMENTAS AVANÇADAS: EVOLUÇÃO, RISCO, METAS, PROJEÇÃO E PRISMA AI (SOB DEMANDA) -->
+  <div class="card carteira-advanced-tools fade-in">
+    <div class="card-head">
+      <div>
+        <h3><i data-lucide="sliders"></i> Ferramentas & Análises Complementares</h3>
+        <p class="text-muted">Evolução temporal, análise de risco da carteira, metas vinculadas e simulações.</p>
+      </div>
+    </div>
+    <nav class="pi-tabs" id="prismaInvestTabs" role="tablist">
+      <button class="pi-tab active" data-pi-tab="visao" role="tab">Evolução & Performance</button>
+      <button class="pi-tab" data-pi-tab="risco" role="tab">Risco da Carteira</button>
+      <button class="pi-tab" data-pi-tab="metas" role="tab">Metas Vinculadas</button>
+      <button class="pi-tab" data-pi-tab="projecao" role="tab">Projeções Futuras</button>
+      <button class="pi-tab" data-pi-tab="ia" role="tab">Insights de IA</button>
+      <button class="pi-tab" data-pi-tab="historico" role="tab">Histórico de Movimentações</button>
+    </nav>
+
+    <div class="pi-panel active" id="piPanelVisao" data-pi-panel="visao">
+      <div class="carteira-charts-grid" id="portfolioVisual">
+        <div class="carteira-chart-card">
+          <div class="chart-card-head">
+            <h4 class="chart-title"><i data-lucide="line-chart"></i> Evolução Patrimonial</h4>
+            <div class="period-filters" id="evolPeriodFilters">
+              <button class="filter-chip" data-period="7d">7d</button>
+              <button class="filter-chip" data-period="30d">30d</button>
+              <button class="filter-chip active" data-period="90d">3m</button>
+              <button class="filter-chip" data-period="180d">6m</button>
+              <button class="filter-chip" data-period="365d">1a</button>
+              <button class="filter-chip" data-period="all">Tudo</button>
+            </div>
+          </div>
+          <div class="portfolio-chart-wrap">
+            <canvas id="portfolioEvolutionChart" height="200"></canvas>
+          </div>
+        </div>
+        <div class="carteira-chart-card">
+          <div class="chart-card-head">
+            <h4 class="chart-title"><i data-lucide="bar-chart-3"></i> Lucro por Investimento</h4>
+          </div>
+          <div class="portfolio-chart-wrap">
+            <canvas id="portfolioLucroChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="pi-insight-cards" id="piInsightCards"></div>
+    </div>
+
+    <div class="pi-panel" id="piPanelRisco" data-pi-panel="risco">
+      <div class="pi-risco-layout">
+        <div class="pi-risco-score-card" id="piRiscoScoreCard">
+          <div class="risco-gauge" id="riscoGauge">
+            <svg viewBox="0 0 120 70" class="risco-svg">
+              <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10" stroke-linecap="round"/>
+              <path id="riscoArc" d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="#22C55E" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 200"/>
+            </svg>
+            <div class="risco-label-wrap">
+              <span class="risco-nivel" id="riscoNivel">—</span>
+              <span class="risco-sub" id="riscoSub">Análise informativa da carteira</span>
+            </div>
+          </div>
+          <p class="risco-disclaimer">Classificação informativa com base na composição da sua carteira. Não constitui aconselhamento de investimento.</p>
+        </div>
+        <div class="pi-risco-factors" id="piRiscoFactors"></div>
+      </div>
+    </div>
+
+    <div class="pi-panel" id="piPanelMetas" data-pi-panel="metas">
+      <p class="text-muted pi-panel-intro">Metas financeiras do Prisma vinculadas ao patrimônio investido. Dados da seção Metas.</p>
+      <div class="pi-metas-grid" id="piMetasGrid"></div>
+    </div>
+
+    <div class="pi-panel" id="piPanelProjecao" data-pi-panel="projecao">
+      <p class="text-muted pi-panel-intro">Estimativas ilustrativas — não são garantia de rentabilidade futura.</p>
+      <div class="pi-proj-controls">
+        <div class="form-field">
+          <label for="projAporteMensal">Aporte mensal (R$)</label>
+          <input type="text" inputmode="decimal" id="projAporteMensal" placeholder="500,00" value="500" />
+        </div>
+        <div class="form-field">
+          <label for="projPrazo">Prazo (meses)</label>
+          <input type="number" id="projPrazo" min="1" max="600" value="60" />
+        </div>
+        <div class="form-field">
+          <label for="projTaxa">Taxa estimada a.a. (%)</label>
+          <input type="number" id="projTaxa" step="0.1" value="10" />
+        </div>
+        <button class="btn primary" id="btnSimularProjecao"><i data-lucide="play"></i> Simular</button>
+      </div>
+      <div class="pi-proj-scenarios" id="piProjScenarios"></div>
+      <div class="carteira-chart-card" style="margin-top:1rem;">
+        <h4 class="chart-title"><i data-lucide="trending-up"></i> Projeção de patrimônio</h4>
+        <div class="portfolio-chart-wrap" style="height:240px;">
+          <canvas id="portfolioProjecaoChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="pi-panel" id="piPanelIa" data-pi-panel="ia">
+      <div class="pi-ai-head">
+        <h4><i data-lucide="sparkles"></i> Insights da Prisma AI</h4>
+        <button class="btn secondary btn-sm" id="btnGerarInsightsIA"><i data-lucide="refresh-cw"></i> Atualizar insights</button>
+      </div>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:1rem;">Insights gerados apenas a partir dos dados reais da sua carteira. Não inventamos valores de mercado.</p>
+      <div class="pi-ai-insights" id="piAiInsights"></div>
+      <h4 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;">Recomendações educacionais</h4>
+      <div class="pi-ai-recs" id="piAiRecs"></div>
+    </div>
+
+    <div class="pi-panel" id="piPanelHistorico" data-pi-panel="historico">
+      <div class="carteira-toolbar">
+        <div class="carteira-filters" id="histFilters">
+          <button class="filter-chip active" data-hist="todos">Todos</button>
+          <button class="filter-chip" data-hist="aporte">Aportes</button>
+          <button class="filter-chip" data-hist="resgate">Resgates</button>
+          <button class="filter-chip" data-hist="aplicacao">Aplicações</button>
+        </div>
+      </div>
+      <ul class="historico-list pi-hist-global" id="piHistoricoGlobal"></ul>
+    </div>
+  </div>
+</section>

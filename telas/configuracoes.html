@@ -1,0 +1,66 @@
+<!-- ============ CONFIGURAÇÕES ============ -->
+<section class="section active" id="configuracoes">
+  <div class="section-heading">
+    <div><h2 data-i18n="section.settings">Configurações</h2><p data-i18n="section.settings.sub">Personalize sua experiência</p></div>
+  </div>
+  <div class="settings-grid">
+    <div class="card settings-card fade-in">
+      <div class="card-head">
+        <h3><i data-lucide="user"></i> Perfil</h3>
+        <div class="card-actions">
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Tipo de Pessoa</span>
+        <label class="person-type-select">
+          <select id="personType">
+            <option value="fisica">Física (CPF)</option>
+            <option value="juridica">Jurídica (CNPJ)</option>
+          </select>
+        </label>
+      </div>
+      <div class="setting-row"><label class="setting-label" for="personName">Nome / Razão Social</label><input type="text" value="" id="personName" placeholder="Seu nome" /></div>
+      <div class="setting-row"><label class="setting-label" id="docLabel" for="personDoc">CPF</label><input type="text" value="" id="personDoc" placeholder="000.000.000-00" /></div>
+      <div class="setting-row"><label class="setting-label" for="personEmail">E-mail</label><input type="email" value="" id="personEmail" placeholder="seu@email.com" /></div>
+    </div>
+
+    <div class="card settings-card fade-in">
+      <div class="card-head">
+        <h3><i data-lucide="mail"></i> Envio de PDF</h3>
+        <div class="card-actions">
+        </div>
+      </div>
+      <div class="setting-row"><span>Destino</span><strong id="emailDeliveryRecipient">E-mail da sua conta</strong></div>
+      <div class="setting-row"><span>Segurança</span><span class="status success">Enviado pelo servidor</span></div>
+      <div class="setting-row"><span>Teste</span>
+        <button class="btn secondary" id="testEmailBtn" type="button"><i data-lucide="send"></i> Testar envio</button>
+      </div>
+      <div class="setting-row setting-hint"><small class="text-muted">As credenciais do serviço de e-mail ficam protegidas no servidor e nunca são armazenadas no navegador.</small></div>
+    </div>
+
+    <div class="card settings-card fade-in">
+      <div class="card-head">
+        <h3><i data-lucide="bell"></i> Notificações</h3>
+        <div class="card-actions">
+        </div>
+      </div>
+      <div class="setting-row"><span>Alertas de gastos</span><label class="switch"><input type="checkbox" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>Relatórios mensais</span><label class="switch"><input type="checkbox" checked /><span class="slider"></span></label></div>
+    </div>
+
+    <div class="card settings-card fade-in">
+      <div class="card-head">
+        <h3><i data-lucide="trash-2"></i> Dados</h3>
+        <div class="card-actions">
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Limpar todos os dados</span>
+        <button class="btn danger" id="clearDataBtn" type="button"><i data-lucide="trash-2"></i> Limpar Dados</button>
+      </div>
+      <div class="setting-row setting-hint">
+        <small class="text-muted">Isso removerá todas as receitas, despesas, contas e configurações salvas.</small>
+      </div>
+    </div>
+  </div>
+</section>

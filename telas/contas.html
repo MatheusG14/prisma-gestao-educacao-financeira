@@ -1,0 +1,34 @@
+<!-- ============ CONTAS ============ -->
+<section class="section active" id="contas">
+  <div class="section-heading">
+    <div><h2>Contas Bancárias</h2><p>Cadastro manual ou conexão simulada (sandbox Open Finance)</p></div>
+    <div class="section-heading-actions">
+      <button class="btn secondary" id="btnSyncAllBanks" title="Sincronizar todas as contas Open Finance">
+        <i data-lucide="refresh-cw"></i> Sincronizar OF
+      </button>
+      <button class="btn secondary" id="btnConnectBank" title="Conectar instituição (sandbox)">
+        <i data-lucide="link"></i> Conectar banco
+      </button>
+      <button class="btn secondary" id="btnTransferirContas" title="Transferir entre contas próprias">
+        <i data-lucide="arrow-left-right"></i> Transferir
+      </button>
+      <button class="btn primary" id="addContaBtn"><i data-lucide="plus"></i> Nova Conta</button>
+    </div>
+  </div>
+
+  <div class="card bank-connect-info fade-in" id="bankConnectInfo">
+    <div class="bci-head">
+      <div>
+        <h3><i data-lucide="shield-check"></i> Open Finance — sandbox integrado</h3>
+        <p class="text-muted">Consentimento simulado → contas + extrato mock → Dashboard, Score e Centro Financeiro. Sem API real.</p>
+      </div>
+      <span class="bci-badge">MOCK</span>
+    </div>
+    <div class="bci-status" id="bankSyncStatus">
+      <span>Instituições conectadas: <strong id="bankConnectedCount">0</strong></span>
+      <span>Última sincronização: <strong id="bankLastSync">—</strong></span>
+    </div>
+  </div>
+
+  <div class="account-grid" id="contasGrid"></div>
+</section>

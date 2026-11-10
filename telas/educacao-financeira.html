@@ -1,0 +1,393 @@
+<!-- ============ EDUCAÇÃO FINANCEIRA ============ -->
+<section class="section active" id="educacao-financeira">
+  <!-- Hero educacional Prisma -->
+  <div class="education-hero">
+    <div class="education-hero-content">
+      <span class="education-kicker"><i data-lucide="sparkles"></i> CENTRAL DE APRENDIZADO PRISMA</span>
+      <h2>Educação Financeira & Hub de Conhecimento</h2>
+      <p>Escolha a área que deseja explorar. Acesse trilhas, testes, guias em PDF e simuladores através dos portais interativos.</p>
+      <div class="education-progress-wrap">
+        <div class="education-progress-label">
+          <span>Seu progresso geral de aprendizagem</span>
+          <strong id="educationProgressText">0% concluído</strong>
+        </div>
+        <div class="education-progress"><span id="educationProgressBar"></span></div>
+      </div>
+    </div>
+    <div class="education-hero-stat">
+      <div class="education-level-icon"><i data-lucide="award"></i></div>
+      <span>Nível atual</span>
+      <strong id="educationLevel">Iniciante</strong>
+      <small id="educationPoints">0 XP</small>
+      <button type="button" class="btn secondary btn-sm" id="btnViewPhases" style="margin-top:8px;width:100%"><i data-lucide="layers"></i> Ver Fases e Níveis</button>
+    </div>
+  </div>
+
+  <!-- Dashboard educacional sintetizado -->
+  <div class="edu-dash-grid" id="eduDashGrid">
+    <div class="edu-dash-card"><span class="edu-dash-label">Quizzes</span><strong id="eduStatQuizzes">0</strong><small>concluídos</small></div>
+    <div class="edu-dash-card"><span class="edu-dash-label">Acertos</span><strong id="eduStatAccuracy">—</strong><small>taxa média</small></div>
+    <div class="edu-dash-card"><span class="edu-dash-label">Conteúdos</span><strong id="eduStatContents">0</strong><small>concluídos</small></div>
+    <div class="edu-dash-card"><span class="edu-dash-label">Conquistas</span><strong id="eduStatAchievements">0</strong><small>desbloqueadas</small></div>
+    <div class="edu-dash-card edu-next"><span class="edu-dash-label">Próximo passo</span><strong id="eduNextStep">Comece pela Fase 1</strong><small id="eduNextStepHint">Fundamentos</small></div>
+  </div>
+
+  <!-- HUB DE PORTAIS POR MODAIS (INTERFACEMENTE ULTRA LIMPA) -->
+  <div class="edu-portal-grid">
+    <div class="card edu-portal-card" id="btnOpenTrilhas">
+      <div class="edu-portal-icon"><i data-lucide="book-open"></i></div>
+      <span class="education-mini-label">TRILHA OFICIAL · 12 MÓDULOS</span>
+      <h3>Trilhas de Aprendizado</h3>
+      <p>Do orçamento básico à independência financeira. Estude os 12 guias oficiais em PDF e aulas práticas por nível.</p>
+      <button type="button" class="btn primary btn-sm"><i data-lucide="arrow-right"></i> Acessar Trilhas</button>
+    </div>
+
+    <div class="card edu-portal-card" id="btnOpenQuizzes">
+      <div class="edu-portal-icon"><i data-lucide="target"></i></div>
+      <span class="education-mini-label">QUIZZES & DESAFIOS</span>
+      <h3>Testes & Medalhas</h3>
+      <p>Mais de 30 quizzes interativos com explicação imediata, desafio do dia e quadro de conquistas.</p>
+      <button type="button" class="btn primary btn-sm"><i data-lucide="arrow-right"></i> Acessar Quizzes</button>
+    </div>
+
+      <div class="card edu-portal-card" id="btnOpenPdf">
+        <div class="edu-portal-icon"><i data-lucide="file-text"></i></div>
+        <span class="education-mini-label">BIBLIOTECA OFICIAL</span>
+        <h3>Guias Educativos em PDF</h3>
+        <p>Faça o download dos 12 guias oficiais completos em PDF para estudo offline ou envio por e-mail.</p>
+        <button type="button" class="btn primary btn-sm"><i data-lucide="arrow-right"></i> Acessar Biblioteca PDF (12 Guias)</button>
+      </div>
+
+    <div class="card edu-portal-card" id="btnOpenSimulador">
+      <div class="edu-portal-icon"><i data-lucide="calculator"></i></div>
+      <span class="education-mini-label">SIMULADOR INTERATIVO</span>
+      <h3>Simulador 50–30–20 & Poupança</h3>
+      <p>Organize sua renda, compare com seus gastos reais e simule projeções de poupança para 1 a 10 anos.</p>
+      <button type="button" class="btn primary btn-sm"><i data-lucide="arrow-right"></i> Abrir Simulador</button>
+    </div>
+  </div>
+
+  <!-- MODAL 1: TRILHAS E AULAS -->
+  <div class="modal-overlay" id="modalEduTrilhas" style="display: none;" role="dialog" aria-labelledby="titleEduTrilhas">
+    <div class="modal-container edu-large-modal">
+      <div class="modal-header">
+        <h3 id="titleEduTrilhas"><i data-lucide="book-open"></i> Trilhas de Aprendizado</h3>
+        <button type="button" class="modal-close" id="closeEduTrilhas" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <!-- Abas da Trilha -->
+        <div class="trilha-modal-tabs" role="tablist" style="display: flex; gap: 8px; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+          <button type="button" class="filter-chip active" id="tabTrilhaOficial" role="tab" aria-selected="true" aria-controls="trilhaEduContainer">
+            <i data-lucide="graduation-cap"></i> 12 Módulos Oficiais (PDF)
+          </button>
+          <button type="button" class="filter-chip" id="tabAulasInterativas" role="tab" aria-selected="false" aria-controls="trilhaAulasWrap">
+            <i data-lucide="book-open"></i> Aulas Rápidas
+          </button>
+        </div>
+
+        <!-- Conteúdo 1: 12 Módulos Oficiais (PDF) -->
+        <div id="trilhaEduContainer" role="region" aria-live="polite"></div>
+
+        <!-- Conteúdo 2: Aulas Rápidas Interativas -->
+        <div id="trilhaAulasWrap" style="display: none;">
+          <div class="edu-controls-row" style="margin-bottom: 1.25rem;">
+            <div class="edu-search-wrap">
+              <i data-lucide="search"></i>
+              <input type="search" id="eduSearchInput" placeholder="Buscar aulas por tema..." autocomplete="off" aria-label="Buscar aulas" />
+            </div>
+            <div class="edu-level-filters" id="eduLevelFilters">
+              <button class="filter-chip active" data-edu-level="todos">Todos os Níveis</button>
+              <button class="filter-chip" data-edu-level="iniciante">🟢 Iniciante</button>
+              <button class="filter-chip" data-edu-level="intermediario">🟡 Intermediário</button>
+              <button class="filter-chip" data-edu-level="avancado">🔴 Avançado</button>
+            </div>
+          </div>
+          <div class="education-courses" id="educationCourses"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: QUIZZES E DESAFIOS -->
+  <div class="modal-overlay" id="modalEduQuizzes" style="display: none;" role="dialog" aria-labelledby="titleEduQuizzes">
+    <div class="modal-container edu-large-modal">
+      <div class="modal-header">
+        <h3 id="titleEduQuizzes"><i data-lucide="target"></i> Quizzes, Desafio Diário e Conquistas</h3>
+        <button type="button" class="modal-close" id="closeEduQuizzes" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <!-- Hub de Quizzes -->
+        <div class="edu-quiz-hub card" id="eduQuizHub" style="margin-bottom: 1.25rem;">
+          <div class="edu-quiz-hub-head">
+            <div>
+              <span class="education-mini-label">QUIZZES</span>
+              <h3>Teste seus conhecimentos</h3>
+              <p class="text-muted" style="font-size:0.85rem;margin:0.25rem 0 0;">+10 XP por acerto · feedback imediato com explicação</p>
+            </div>
+            <select id="eduQuizLevelSelect" class="carteira-sort" aria-label="Nível do quiz">
+              <option value="iniciante">Iniciante</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="avancado">Avançado</option>
+            </select>
+          </div>
+          <div class="edu-quiz-list" id="eduQuizList"></div>
+          <div class="edu-quiz-player" id="eduQuizPlayer" hidden>
+            <div class="edu-quiz-progress"><span id="eduQuizProgressBar"></span></div>
+            <p class="edu-quiz-counter" id="eduQuizCounter">1 / 5</p>
+            <h4 id="eduQuizQuestion">Pergunta</h4>
+            <div class="education-answers" id="eduQuizAnswers"></div>
+            <div class="education-challenge-feedback" id="eduQuizFeedback"></div>
+            <div class="edu-quiz-actions">
+              <button class="btn secondary btn-sm" id="eduQuizExit">Sair</button>
+              <button class="btn primary btn-sm" id="eduQuizNext" hidden>Próxima</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desafio do Dia -->
+        <div class="education-challenge card" style="margin-bottom: 1.25rem;">
+          <div class="education-challenge-head">
+            <div>
+              <span class="education-mini-label">DESAFIO DO DIA</span>
+              <h3 id="educationChallengeTitle">Descubra quanto você realmente pode gastar</h3>
+            </div>
+            <span class="challenge-points">+20 XP</span>
+          </div>
+          <p id="educationChallengeQuestion">Quanto deve sobrar, idealmente, da sua renda para construir uma reserva financeira?</p>
+          <div class="education-answers" id="educationChallengeAnswers">
+            <button class="education-answer" data-correct="false">Nada, se todas as contas estiverem pagas</button>
+            <button class="education-answer" data-correct="true">Uma parte da renda, conforme seu orçamento</button>
+            <button class="education-answer" data-correct="false">Sempre 50% da renda</button>
+            <button class="education-answer" data-correct="false">Somente quando houver uma emergência</button>
+          </div>
+          <div class="education-challenge-feedback" id="educationChallengeFeedbackText"></div>
+        </div>
+
+        <!-- Conquistas -->
+        <div class="edu-achievements card" id="eduAchievements">
+          <span class="education-mini-label">CONQUISTAS</span>
+          <h3>Suas medalhas de progresso</h3>
+          <div class="edu-achievements-grid" id="eduAchievementsGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BIBLIOTECA PDF -->
+  <div class="modal-overlay" id="modalEduPdf" style="display: none;" role="dialog" aria-labelledby="titleEduPdf">
+    <div class="modal-container edu-large-modal">
+      <div class="modal-header">
+        <h3 id="titleEduPdf"><i data-lucide="file-text"></i> Biblioteca de Guias Educativos em PDF</h3>
+        <button type="button" class="modal-close" id="closeEduPdf" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div class="edu-pdf-library card" id="eduPdfLibrary" style="margin: 0; border: none; box-shadow: none; background: transparent;">
+          <div class="edu-pdf-grid">
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 01</div>
+              <div class="edu-pdf-info">
+                <h4>Orçamento Inteligente</h4>
+                <p>Guia prático para organizar receitas, despesas e categorias essenciais.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/01-orcamento-inteligente.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="orcamento"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 02</div>
+              <div class="edu-pdf-info">
+                <h4>Dívidas Sob Controle</h4>
+                <p>Estratégias de quitação, renegociação e eliminação de juros altos.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/02-dividas-sob-controle.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="dividas"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 03</div>
+              <div class="edu-pdf-info">
+                <h4>Reserva de Emergência</h4>
+                <p>Como calcular e onde guardar sua proteção financeira para imprevistos.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/03-reserva-de-emergencia.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="reserva"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 04</div>
+              <div class="edu-pdf-info">
+                <h4>Primeiros Passos para Investir</h4>
+                <p>Conceitos de risco, liquidez, rentabilidade e alocação consciente.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/04-primeiros-passos-investir.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="investir"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 05</div>
+              <div class="edu-pdf-info">
+                <h4>Cartão de Crédito</h4>
+                <p>Uso inteligente do limite, controle de fatura e prevenção do rotativo.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/05-cartao-de-credito.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="cartao"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 06</div>
+              <div class="edu-pdf-info">
+                <h4>Metas e Hábitos</h4>
+                <p>Planejamento de objetivos sustentáveis e criação de rotinas financeiras.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/06-metas-e-habitos.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="metas"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 07</div>
+              <div class="edu-pdf-info">
+                <h4>Alocação de Ativos</h4>
+                <p>Distribua o patrimônio conforme objetivo, prazo e risco com diversificação consciente.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/07-alocacao-de-ativos.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="alocacao"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 08</div>
+              <div class="edu-pdf-info">
+                <h4>Renda Fixa Avançada</h4>
+                <p>Juros reais, marcação a mercado e comparação entre títulos públicos e privados.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/08-renda-fixa-avancada.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="rendafixa"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 09</div>
+              <div class="edu-pdf-info">
+                <h4>Ações e Fundos Imobiliários</h4>
+                <p>Análise de fundamentos, proventos, volatilidade e disciplina em renda variável.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/09-acoes-e-fiis.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="acoes"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 10</div>
+              <div class="edu-pdf-info">
+                <h4>Impostos sobre Investimentos</h4>
+                <p>Tributação de renda fixa, ações e FIIs: pague o devido sem multas nem excessos.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/10-impostos-sobre-investimentos.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="impostos"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 11</div>
+              <div class="edu-pdf-info">
+                <h4>Proteção e Previdência</h4>
+                <p>Proteja renda, família e patrimônio contra eventos de alto impacto e planeje o futuro.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/11-protecao-e-previdencia.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="previdencia"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+            <div class="edu-pdf-card">
+              <div class="edu-pdf-badge">PDF 12</div>
+              <div class="edu-pdf-info">
+                <h4>Independência Financeira</h4>
+                <p>Planeje a formação do patrimônio gerador de renda que sustentará seu estilo de vida.</p>
+              </div>
+              <div class="edu-pdf-actions">
+                <a href="conteudos/educacao-financeira/12-independencia-financeira.pdf" target="_blank" rel="noopener" class="btn secondary btn-sm"><i data-lucide="download"></i> Baixar</a>
+                <button type="button" class="btn secondary btn-sm" data-send-education-pdf="independencia"><i data-lucide="mail"></i> E-mail</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: SIMULADOR 50-30-20 -->
+  <div class="modal-overlay" id="modalEduSimulador" style="display: none;" role="dialog" aria-labelledby="titleEduSimulador">
+    <div class="modal-container edu-large-modal">
+      <div class="modal-header">
+        <h3 id="titleEduSimulador"><i data-lucide="calculator"></i> Simulador 50–30–20 & Projeções de Poupança</h3>
+        <button type="button" class="modal-close" id="closeEduSimulador" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div class="education-simulator card edu-sim-pro" id="eduSimulatorCard" style="margin: 0; border: none; box-shadow: none; background: transparent;">
+          <p class="edu-sim-disclaimer">Regra orientativa — adapte à sua realidade. Não é obrigação universal.</p>
+
+          <label for="educationIncome">Renda mensal (R$)</label>
+          <div class="education-input-wrap"><span>R$</span><input id="educationIncome" type="text" inputmode="decimal" placeholder="4.000,00"></div>
+
+          <div class="edu-sim-chart-wrap">
+            <canvas id="eduSimChart" height="160"></canvas>
+          </div>
+          <div class="education-sim-results" id="educationSimResults">
+            <div class="edu-sim-row needs"><span>Necessidades · 50%</span><strong id="educationNeeds">R$ 0,00</strong></div>
+            <div class="edu-sim-row wants"><span>Desejos · 30%</span><strong id="educationWants">R$ 0,00</strong></div>
+            <div class="edu-sim-row goals"><span>Poupança/Invest. · 20%</span><strong id="educationGoals">R$ 0,00</strong></div>
+          </div>
+
+          <button type="button" class="btn secondary btn-sm edu-toggle-reality" id="eduToggleReality"><i data-lucide="git-compare"></i> Comparar com minha realidade</button>
+          <div class="edu-reality-panel" id="eduRealityPanel" hidden>
+            <label>Necessidades reais (R$)</label>
+            <input type="text" inputmode="decimal" id="eduRealNeeds" placeholder="0,00" class="edu-real-input" />
+            <label>Desejos reais (R$)</label>
+            <input type="text" inputmode="decimal" id="eduRealWants" placeholder="0,00" class="edu-real-input" />
+            <label>Poupança/invest. reais (R$)</label>
+            <input type="text" inputmode="decimal" id="eduRealSave" placeholder="0,00" class="edu-real-input" />
+            <div class="edu-alerts" id="eduSimAlerts"></div>
+          </div>
+
+          <div class="edu-proj-block">
+            <span class="education-mini-label">PROJEÇÃO DA POUPANÇA</span>
+            <div class="edu-proj-row">
+              <label for="eduProjTaxa">Taxa estimada a.a. (%)</label>
+              <input type="number" id="eduProjTaxa" value="8" step="0.1" min="0" max="30" />
+            </div>
+            <div class="edu-proj-results" id="eduProjResults">
+              <div><span>1 ano</span><strong id="eduProj1">R$ 0,00</strong></div>
+              <div><span>3 anos</span><strong id="eduProj3">R$ 0,00</strong></div>
+              <div><span>5 anos</span><strong id="eduProj5">R$ 0,00</strong></div>
+              <div><span>10 anos</span><strong id="eduProj10">R$ 0,00</strong></div>
+            </div>
+            <p class="edu-sim-disclaimer">Estimativa ilustrativa com juros compostos mensais. Não é garantia de retorno.</p>
+          </div>
+
+          <div class="edu-sim-recs" id="eduSimRecs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Mapa de Fases e Níveis -->
+  <div class="modal-overlay" id="eduPhasesModal" style="display: none;" role="dialog" aria-labelledby="eduPhasesTitle">
+    <div class="modal-container edu-phases-modal-container">
+      <div class="modal-header">
+        <h3 id="eduPhasesTitle"><i data-lucide="layers"></i> Mapa de Fases e Níveis de Aprendizado</h3>
+        <button type="button" class="modal-close" id="closeEduPhasesModal" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <p class="text-muted" style="margin-bottom: 1rem;">Conforme você avança e ganha XP, novas fases e módulos estratégicos são liberados automaticamente.</p>
+        <div class="edu-phases" id="eduPhases"></div>
+      </div>
+    </div>
+  </div>
+
+</section>

@@ -1,0 +1,67 @@
+<!-- ============ GERENCIAMENTO DE PERFIS ============ -->
+<section class="section active" id="dados">
+  <div class="section-heading">
+    <div><h2>Gerenciamento de Perfis</h2><p>Crie e gerencie múltiplos perfis de usuários</p></div>
+    <button class="btn primary" id="addProfileBtn"><i data-lucide="user-plus"></i> Novo Perfil</button>
+  </div>
+
+  <!-- Lista de Perfis -->
+  <div class="card profiles-card">
+    <div class="card-head">
+      <h3><i data-lucide="users"></i> Perfis Cadastrados</h3>
+      <div class="card-actions">
+        <span class="profile-count" id="profileCount">0 perfis</span>
+      </div>
+    </div>
+    <div class="profiles-grid" id="profilesGrid">
+      <!-- Perfis serão renderizados aqui dinamicamente -->
+    </div>
+    <div class="empty-state" id="profilesEmptyState">
+      <div class="empty-icon">
+        <i data-lucide="user-plus"></i>
+      </div>
+      <h4>Nenhum perfil cadastrado</h4>
+      <p>Clique em "Novo Perfil" para criar seu primeiro perfil</p>
+    </div>
+  </div>
+
+  <!-- Perfil Atual -->
+  <div class="card current-profile-card">
+    <div class="card-head">
+      <h3><i data-lucide="user-circle"></i> Perfil Atual</h3>
+      <div class="card-actions">
+        <button class="btn switch-account" id="switchAccountBtn"><i data-lucide="refresh-cw"></i> Alternar Conta</button>
+        <button class="btn secondary" id="editCurrentProfileBtn"><i data-lucide="edit"></i> Editar</button>
+        <button class="btn danger" id="deleteAccountBtn"><i data-lucide="trash-2"></i> Excluir Conta</button>
+        <button class="btn danger" id="logoutProfileBtn"><i data-lucide="log-out"></i> Sair</button>
+      </div>
+    </div>
+    <div class="current-profile-info" id="currentProfileInfo">
+      <div class="profile-avatar" aria-hidden="true">
+        <i data-lucide="user-round"></i>
+      </div>
+      <div class="profile-details">
+        <h4 id="currentProfileName">-</h4>
+        <p id="currentProfileEmail">-</p>
+        <div class="profile-meta">
+          <span class="profile-type" id="currentProfileType">-</span>
+          <span class="profile-doc" id="currentProfileDoc">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="current-profile-stats" id="currentProfileStats">
+      <div class="stat-item">
+        <span class="stat-label">Saldo</span>
+        <span class="stat-value" id="currentProfileBalance">R$ 0,00</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Receitas</span>
+        <span class="stat-value" id="currentProfileIncome">R$ 0,00</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Despesas</span>
+        <span class="stat-value" id="currentProfileExpenses">R$ 0,00</span>
+      </div>
+    </div>
+  </div>
+</section>

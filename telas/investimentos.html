@@ -1,0 +1,170 @@
+<!-- ============ INVESTIMENTOS ============ -->
+<section class="section active" id="investimentos">
+  <div class="section-heading">
+    <div><h2>Investimentos</h2><p>Explore opções de investimento e acompanhe sua carteira</p></div>
+    <div class="section-heading-actions">
+      <button class="btn secondary btn-carteira-ativos" id="btnCarteiraInvestimentos" title="Abrir Carteira de Ativos">
+        <i data-lucide="briefcase-business"></i> Carteira de Ativos
+      </button>
+      <button class="btn primary" id="addInvestimentoBtn"><i data-lucide="plus"></i> Novo Investimento</button>
+    </div>
+  </div>
+  
+  <!-- Catálogo de Ativos — Prisma Invest -->
+  <div class="card asset-catalog-card fade-in" id="assetCatalogCard" style="margin-bottom: 1.5rem;">
+    <div class="card-head">
+      <div>
+        <h3><i data-lucide="search"></i> Catálogo de Ativos</h3>
+        <p class="text-muted">Pesquise e adicione criptomoedas, ações e FIIs à sua carteira. Preços: informe manualmente (API de mercado preparada para o futuro).</p>
+      </div>
+    </div>
+    <div class="asset-catalog-toolbar">
+      <div class="search-wrap asset-search-wrap">
+        <i data-lucide="search"></i>
+        <input type="search" id="assetCatalogSearch" placeholder="Buscar por nome, ticker, setor..." autocomplete="off" />
+      </div>
+      <select id="assetCatalogCategory" class="carteira-sort" aria-label="Categoria">
+        <option value="todas">Todas categorias</option>
+        <option value="criptomoedas">Criptomoedas</option>
+        <option value="acoes-br">Ações Brasileiras</option>
+        <option value="acoes-global">Ações Globais</option>
+        <option value="fiis">FIIs</option>
+      </select>
+      <select id="assetCatalogMarket" class="carteira-sort" aria-label="Mercado">
+        <option value="todos">Todos mercados</option>
+        <option value="brasil">Brasil</option>
+        <option value="eua">EUA</option>
+        <option value="global">Global / Cripto</option>
+      </select>
+      <select id="assetCatalogSector" class="carteira-sort" aria-label="Setor">
+        <option value="todos">Todos setores</option>
+        <option value="tecnologia">Tecnologia</option>
+        <option value="financeiro">Financeiro</option>
+        <option value="energia">Energia</option>
+        <option value="saúde">Saúde</option>
+        <option value="consumo">Consumo</option>
+        <option value="indústria">Indústria</option>
+        <option value="imobiliário">Imobiliário</option>
+        <option value="cripto">Cripto</option>
+      </select>
+    </div>
+    <p class="asset-catalog-count text-muted" id="assetCatalogCount">0 ativos</p>
+    <div class="asset-catalog-grid" id="assetCatalogGrid"></div>
+  </div>
+
+  <div class="investments-grid">
+    <!-- Tesouro Direto -->
+    <div class="invest-card" data-invest="tesouro">
+      <div class="invest-card-header">
+        <div class="invest-icon tesouro">
+          <i data-lucide="landmark"></i>
+        </div>
+        <div class="invest-risk low">
+          <span>Risco Baixo</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>Tesouro Direto</h3>
+        <p class="invest-desc">Títulos públicos garantidos pelo governo brasileiro</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+
+    <!-- CDB -->
+    <div class="invest-card" data-invest="cdb">
+      <div class="invest-card-header">
+        <div class="invest-icon cdb">
+          <i data-lucide="landmark"></i>
+        </div>
+        <div class="invest-risk low">
+          <span>Risco Baixo</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>CDB</h3>
+        <p class="invest-desc">Certificado de Depósito Bancário</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="invest-card" data-invest="acoes">
+      <div class="invest-card-header">
+        <div class="invest-icon acoes">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <div class="invest-risk high">
+          <span>Risco Alto</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>Ações</h3>
+        <p class="invest-desc">Participação em empresas de capital aberto</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+
+    <!-- FIIs -->
+    <div class="invest-card" data-invest="fii">
+      <div class="invest-card-header">
+        <div class="invest-icon fii">
+          <i data-lucide="building"></i>
+        </div>
+        <div class="invest-risk medium">
+          <span>Risco Médio</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>Fundos Imobiliários</h3>
+        <p class="invest-desc">Investimento em imóveis via bolsa de valores</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+
+    <!-- Criptomoedas -->
+    <div class="invest-card" data-invest="cripto">
+      <div class="invest-card-header">
+        <div class="invest-icon cripto">
+          <i data-lucide="bitcoin"></i>
+        </div>
+        <div class="invest-risk very-high">
+          <span>Risco Muito Alto</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>Criptomoedas</h3>
+        <p class="invest-desc">Moedas digitais descentralizadas</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+
+    <!-- Fundos Multimercado -->
+    <div class="invest-card" data-invest="multimercado">
+      <div class="invest-card-header">
+        <div class="invest-icon multimercado">
+          <i data-lucide="pie-chart"></i>
+        </div>
+        <div class="invest-risk medium">
+          <span>Risco Médio</span>
+        </div>
+      </div>
+      <div class="invest-card-body">
+        <h3>Fundos Multimercado</h3>
+        <p class="invest-desc">Diversificação em diferentes classes de ativos</p>
+      </div>
+      <div class="invest-card-footer">
+        <button class="btn invest-details-btn" type="button">Ver opções →</button>
+      </div>
+    </div>
+  </div>
+</section>
