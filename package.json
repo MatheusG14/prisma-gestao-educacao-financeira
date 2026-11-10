@@ -1,0 +1,17 @@
+{
+  "name": "prisma-gestao-financeira",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prisma Gestão Financeira com persistência real em SQLite e Autenticação Segura",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/prisma-full-flow.test.js tests/prisma-dashboard-grandcard.test.js tests/prisma-education-pdf-viewer.test.js",
+    "test:auth": "node --test tests/prisma-full-flow.test.js",
+    "test:audit": "node tests/audit-backend-security.js && node tests/audit-dom-ids.js && node tests/audit-css-files.js && node tests/audit-html-screens.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
