@@ -1763,6 +1763,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let firebaseAuthUnsubscribe = null;
   let firebaseActivationPromise = null;
   let firebaseConsent = null;
+  let firebaseImportInProgress = false;
   let firebaseApplyingState = false;
   let currentLocalUser = null;
   let serverAuthenticated = false;
@@ -2054,6 +2055,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  function stableFirebaseJson(value) {
+    if (Array.isArray(value)) return `[${value.map(stableFirebaseJson).join(',')}]`;
+    if (value && typeof value === 'object') {
+      return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableFirebaseJson(value[key])}`).join(',')}}`;
+    }
+    return JSON.stringify(value);
+  }
+
+  function isPristineFirebaseState(state) {
+    return Boolean(state) && stableFirebaseJson(state) === stableFirebaseJson(defaultFirebaseState());
+  }
+
   async function activateFirebaseSession(firebaseUser, firebase) {
     if (firebaseAuthenticated && currentLocalUser?.id === firebaseUser.uid) return;
     if (firebaseActivationPromise) return firebaseActivationPromise;
@@ -2086,9 +2099,23 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       const remote = await firebase.loadUserData(firebaseUser.uid);
       let state;
+      let shouldMigrateLegacy = false;
 
+      if (remote.hasState && !remote.state) {
+        throw new Error('Os dados remotos desta conta estão em formato inválido. Nenhum dado foi alterado.');
+      }
       if (remote.state) {
         state = normalizeFirebaseState(remote.state);
+        if (legacyProfile?.id && isPristineFirebaseState(remote.state)) {
+          const shouldMigrate = window.confirm(
+            `Encontramos dados locais associados a ${email} e a conta Firebase ainda está vazia. Deseja copiá-los para esta conta? Os dados locais originais serão preservados.`
+          );
+          if (shouldMigrate) {
+            loadProfileData(legacyProfile.id);
+            state = collectServerState();
+            shouldMigrateLegacy = true;
+          }
+        }
       } else {
         state = defaultFirebaseState();
         if (legacyProfile?.id) {
@@ -2098,6 +2125,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (shouldMigrate) {
             loadProfileData(legacyProfile.id);
             state = collectServerState();
+            shouldMigrateLegacy = true;
           }
         }
       }
@@ -2105,7 +2133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       firebaseConsent = remote.consent || null;
       applyServerState(state, account);
       if (!remote.profile) await firebase.saveProfile(firebaseUser, { created: true });
-      if (!remote.state) {
+      if (shouldMigrateLegacy) {
         firebaseRevision = await firebase.saveState(firebaseUser.uid, state, remote.revision);
       } else {
         firebaseRevision = remote.revision;
@@ -2114,6 +2142,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (firebaseUnsubscribe) firebaseUnsubscribe();
       firebaseUnsubscribe = firebase.watchState(firebaseUser.uid, (incomingState, revision) => {
         if (!incomingState || !revision || revision === firebaseRevision) return;
+        if (firebaseImportInProgress) return;
         if (serverSyncPending || serverSyncInFlight) {
           showToast('Há alterações locais e remotas ao mesmo tempo. Recarregue a página para resolver o conflito sem sobrescrever dados.', 'warning');
           return;
@@ -2232,6 +2261,67 @@ document.addEventListener('DOMContentLoaded', () => {
     clearDataBtn.addEventListener('click', () => {
       if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
         limparTodosDados();
+      }
+    });
+  }
+
+  const sqliteBackupInput = document.getElementById('sqliteBackupInput');
+  if (sqliteBackupInput) {
+    sqliteBackupInput.addEventListener('change', async () => {
+      const file = sqliteBackupInput.files?.[0];
+      if (!file) return;
+
+      try {
+        if (!firebaseAuthenticated || !currentLocalUser?.id) {
+          throw new Error('Entre na sua conta Firebase antes de importar um backup.');
+        }
+        if (file.size > 1024 * 1024) {
+          throw new Error('O backup excede o limite de 1 MB.');
+        }
+        if (serverSyncInFlight || serverSyncPending) {
+          throw new Error('Há alterações sendo sincronizadas. Aguarde e tente importar novamente.');
+        }
+
+        const backup = JSON.parse(await file.text());
+        if (backup?.format !== 'prisma-gef-sqlite-backup' || backup.version !== 1) {
+          throw new Error('O arquivo não é um backup SQLite compatível do Prisma.');
+        }
+        const firebase = await getFirebaseClient();
+        const user = await firebase.getCurrentUser();
+        const backupEmail = normalizeAuthEmail(backup.user?.email);
+        const signedInEmail = normalizeAuthEmail(user?.email);
+        if (!signedInEmail || backupEmail !== signedInEmail) {
+          throw new Error('O e-mail do backup não corresponde à conta Firebase conectada.');
+        }
+        if (!backup.state || typeof backup.state !== 'object' || Array.isArray(backup.state)) {
+          throw new Error('O backup não contém um estado financeiro válido.');
+        }
+
+        const state = normalizeFirebaseState(backup.state);
+        const stateSize = new TextEncoder().encode(JSON.stringify(state)).length;
+        if (stateSize > 800000) {
+          throw new Error('Os dados excedem o limite seguro de sincronização do Firestore.');
+        }
+
+        const remote = await firebase.loadUserData(currentLocalUser.id);
+        if (remote.hasState && !isPristineFirebaseState(remote.state)) {
+          throw new Error('Esta conta já possui dados no Firestore. A importação não sobrescreve dados existentes.');
+        }
+        if (!window.confirm(`Importar os dados de ${backup.user.name || backupEmail}? O arquivo original e o banco SQLite serão preservados. Esta ação só é permitida em uma conta sem dados remotos.`)) {
+          return;
+        }
+
+        firebaseImportInProgress = true;
+        const revision = await firebase.saveState(currentLocalUser.id, state, remote.revision);
+        firebaseRevision = revision;
+        applyServerState(state, currentLocalUser);
+        showToast('Backup importado e sincronizado com o Firestore.');
+      } catch (error) {
+        console.error('Falha ao importar o backup SQLite:', error);
+        showToast(authErrorMessage(error), 'warning');
+      } finally {
+        firebaseImportInProgress = false;
+        sqliteBackupInput.value = '';
       }
     });
   }
@@ -8796,16 +8886,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentProfileId && !saveCurrentProfileData()) {
         throw new Error('Uma ou mais informações não puderam ser gravadas no armazenamento local.');
       }
-    } catch (error) {
-      console.error('Não foi possível salvar os dados antes do logout:', error);
-      if (firebaseAuthenticated && !(await syncServerStateNow())) {
-        throw new Error('Não foi possível sincronizar os dados com o Firestore. O logout foi cancelado para evitar perda de informações.');
-      }
       if (firebaseAuthenticated) {
+        clearTimeout(serverSyncTimer);
+        if (!(await syncServerStateNow())) {
+          throw new Error('Não foi possível sincronizar os dados com o Firestore. O logout foi cancelado para evitar perda de informações.');
+        }
         const firebase = await getFirebaseClient();
         await firebase.logout();
       }
-      showToast(error.message || 'Não foi possível salvar os dados antes do logout.', 'warning');
+    } catch (error) {
+      console.error('Não foi possível salvar os dados antes do logout:', error);
+      showToast(authErrorMessage(error), 'warning');
       return;
     }
     cleanLocalUserData();

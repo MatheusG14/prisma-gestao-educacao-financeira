@@ -3106,6 +3106,20 @@
               </div>
             </div>
 
+            <div class="card settings-card fade-in">
+              <div class="card-head">
+                <h3><i data-lucide="database"></i> Backup e migração</h3>
+              </div>
+              <div class="setting-row">
+                <span>Importar backup SQLite</span>
+                <label class="btn secondary" for="sqliteBackupInput"><i data-lucide="upload"></i> Selecionar backup</label>
+                <input id="sqliteBackupInput" type="file" accept="application/json,.json" hidden />
+              </div>
+              <div class="setting-row setting-hint">
+                <small class="text-muted">Importa somente para uma conta Firebase sem dados financeiros existentes. O arquivo e o banco original não são apagados; o consentimento de privacidade será solicitado separadamente.</small>
+              </div>
+            </div>
+
             <!-- LGPD Card -->
             <div class="card settings-card fade-in" id="lgpdSettingsCard">
               <div class="card-head">

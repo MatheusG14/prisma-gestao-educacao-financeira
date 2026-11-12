@@ -189,6 +189,7 @@ async function loadUserData(uid) {
   return {
     profile: profileSnapshot.exists() ? profileSnapshot.data() : null,
     state: stateDocument ? stateDocument.data : null,
+    hasState: stateSnapshot.exists(),
     revision: stateDocument ? stateDocument.revision : null,
     consent: consentSnapshot.exists() ? consentSnapshot.data() : null
   };

@@ -34,6 +34,22 @@ Existing browser financial data can be copied to the signed-in Firebase account
 after the user confirms the migration. The original local records are not
 deleted. SQLite accounts and states are not migrated automatically.
 
+To migrate a SQLite user's financial state, first create a backup from the
+machine that has the database:
+
+```powershell
+$env:DATABASE_PATH = "C:\path\to\prisma.sqlite"
+node scripts\export-sqlite-user.js usuario@example.com C:\path\to\prisma-backup.json
+```
+
+The export opens SQLite in read-only mode and excludes password hashes,
+sessions, reset tokens, and audit metadata. Sign in to the Firebase account
+with the same email, then use **Configurações → Backup e migração** to import
+the JSON backup. Import is allowed only when that Firebase account has no
+financial state yet; a transaction prevents concurrent or accidental
+overwrites. The source database and JSON backup are preserved. Consent is not
+carried over and must be recorded separately in the new deployment.
+
 The static Netlify deployment does not run `server.js`. Routes that still
 depend on `/api`, including email/PDF and administration endpoints, require a
 separately deployed compatible backend (for example, Netlify Functions).
