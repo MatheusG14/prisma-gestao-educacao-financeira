@@ -12,8 +12,13 @@
 'use strict';
 
 (function () {
+  const localStorage = window.PrismaStorage || window.localStorage;
   /* ── Constantes ───────────────────────────────────────────────── */
   const LS_KEY = 'prisma_trilha_progresso_v1';
+  function getProgressStorageKey() {
+    const profileId = localStorage.getItem('prisma_current_profile_id');
+    return profileId ? `${LS_KEY}_${profileId}` : LS_KEY;
+  }
   const TOTAL = 12;
   const NIVEL_LABELS = {
     iniciante: 'Iniciante',
@@ -29,14 +34,16 @@
   /* ── Utilitários de localStorage (com fallback) ───────────────── */
   function lsGet() {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const raw = localStorage.getItem(getProgressStorageKey());
       const parsed = raw ? JSON.parse(raw) : {};
       return typeof parsed === 'object' && parsed !== null ? parsed : {};
     } catch (_) { return {}; }
   }
 
   function lsSet(data) {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (_) {}
+    try { localStorage.setItem(getProgressStorageKey(), JSON.stringify(data)); } catch (error) {
+      console.error('Não foi possível salvar o progresso da trilha:', error);
+    }
   }
 
   function isConcluido(id) { return !!lsGet()[id]; }

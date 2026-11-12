@@ -89,7 +89,7 @@
 
         <div class="registration-footer">
           <p class="registration-terms">Ao cadastrar-se, você concorda com nossos termos de uso</p>
-          <p class="registration-terms">Sua conta fica neste navegador/dispositivo, sem sincronização. Limpar o armazenamento pode apagar os dados; autenticação local não protege contra quem controla o navegador. Recursos que usam serviços externos ainda exigem backend.</p>
+          <p class="registration-terms">Sua conta é protegida pelo Firebase Authentication e seus dados são sincronizados pelo Prisma. A disponibilidade da sessão depende das permissões de armazenamento do navegador.</p>
           <p class="registration-switch">Já tem uma conta? <a href="#" id="switchToLogin">Faça login</a></p>
         </div>
       </div>
@@ -152,7 +152,7 @@
         </div>
 
         <div class="login-footer">
-          <p class="registration-terms">Conta e sessão locais neste dispositivo, sem sincronização. Limpar o armazenamento pode apagar dados; a autenticação no navegador não substitui proteção no servidor.</p>
+          <p class="registration-terms">Entre com sua conta Prisma para sincronizar seus dados financeiros entre dispositivos.</p>
           <p class="login-switch">Não tem uma conta? <a href="#" id="switchToRegister">Cadastre-se</a></p>
         </div>
       </div>
@@ -168,7 +168,7 @@
   <div class="login-overlay" id="resetPasswordModal" style="display:none">
     <div class="login-container">
       <div class="login-content">
-        <div class="login-header"><div class="login-logo"><img src="assets/images/logo-mark.png" alt="Prisma" class="login-logo-img" loading="lazy" width="56" height="64" decoding="async"></div><h1 class="login-title" id="resetTitle">Recuperar acesso</h1><p class="login-subtitle" id="resetSubtitle">A recuperação por e-mail não está disponível para contas locais.</p></div>
+        <div class="login-header"><div class="login-logo"><img src="assets/images/logo-mark.png" alt="Prisma" class="login-logo-img" loading="lazy" width="56" height="64" decoding="async"></div><h1 class="login-title" id="resetTitle">Recuperar acesso</h1><p class="login-subtitle" id="resetSubtitle">Enviaremos um link seguro para o e-mail da sua conta.</p></div>
         <form id="forgotPasswordForm" class="login-form">
           <div class="form-field"><label for="forgotEmail">E-mail</label><input type="email" id="forgotEmail" required autocomplete="email" placeholder="seu@email.com"></div>
           <div class="auth-feedback" id="forgotFeedback" style="display: none;" role="alert"></div>
@@ -3939,13 +3939,16 @@
   </div>
 
   <!-- Critical path: UI icons + charts for dashboard. jsPDF loaded on-demand when exporting PDF. -->
+  <script src="js/prisma-storage.js"></script>
   <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="js/prisma-bank-sync.js?v=20260911-perf" defer></script>
   <script src="js/prisma-finance-engine.js" defer></script>
   <script src="js/prisma-monitoring-center.js" defer></script>
   <script src="js/screen-loader.js" defer></script>
-  <script src="js/script.js?v=20261104-monitoring-typography-v1" defer></script>
+  <script src="js/firebase-config.js"></script>
+  <script type="module" src="js/firebase-client.js"></script>
+  <script src="js/script.js?v=20261111-firebase-integration-v1" defer></script>
   <script src="js/prisma-enhancements.js?v=20261106-dashboard-empty-state-v2" defer></script>
   <!-- Catálogo de ativos: sob demanda quando a seção de investimentos é usada -->
   <script src="js/prisma-assets-catalog.js?v=20260911-perf" defer></script>

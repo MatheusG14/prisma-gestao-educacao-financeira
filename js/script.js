@@ -34,6 +34,7 @@ function getInitialStorageProfiles() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const localStorage = window.PrismaStorage || window.localStorage;
   // Trava o scroll do documento enquanto qualquer overlay/modal estiver aberto.
   // MutationObserver cobre também modais legados abertos via style.display direto.
   const modalScrollOverlaySelector = '.modal-overlay, .login-overlay, .registration-overlay, .welcome-overlay, .lgpd-modal-overlay, .education-lesson-modal';
@@ -467,6 +468,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return `prisma_ai_health_score_${profileId || 'default'}`;
   }
 
+  function getScopedStorageKey(key, profileId = currentProfileId) {
+    return profileId ? `${key}_${profileId}` : key;
+  }
+
   // Chaves de storage atuais (baseadas no perfil atual)
   let STORAGE_KEYS = { ...BASE_STORAGE_KEYS };
 
@@ -566,10 +571,34 @@ document.addEventListener('DOMContentLoaded', () => {
     el.style.display = 'none';
   }
 
+  function authErrorMessage(error) {
+    const messages = {
+      'auth/email-already-in-use': 'Este e-mail já possui uma conta Firebase. Faça login para continuar.',
+      'auth/invalid-email': 'Informe um endereço de e-mail válido.',
+      'auth/invalid-credential': 'E-mail ou senha inválidos.',
+      'auth/user-disabled': 'Esta conta foi desativada. Entre em contato com o suporte.',
+      'auth/weak-password': 'A senha deve ter pelo menos 8 caracteres.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde um momento e tente novamente.',
+      'auth/network-request-failed': 'Não foi possível conectar ao Firebase. Verifique sua conexão.',
+      'auth/operation-not-allowed': 'O login por e-mail e senha ainda não está habilitado no Firebase Console.',
+      'auth/unauthorized-domain': 'Este domínio não está autorizado no Firebase Authentication.',
+      'auth/invalid-action-code': 'O link de redefinição é inválido ou expirou.',
+      'auth/expired-action-code': 'O link de redefinição expirou. Solicite outro.',
+      PRISMA_DATA_CONFLICT: 'Os dados foram alterados em outro dispositivo. Recarregue antes de continuar.'
+    };
+    return messages[error?.code] || error?.message || 'Não foi possível concluir a operação no Firebase.';
+  }
+
   function cleanLocalUserData() {
     isAuthenticated = false;
     currentLocalUser = null;
     serverAuthenticated = false;
+    firebaseAuthenticated = false;
+    firebaseRevision = null;
+    if (firebaseUnsubscribe) {
+      firebaseUnsubscribe();
+      firebaseUnsubscribe = null;
+    }
     currentServerUser = null;
     currentProfileId = null;
     currentProfile = null;
@@ -687,6 +716,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginModal = document.getElementById('loginModal');
   const loginForm = document.getElementById('loginForm');
   const switchToRegister = document.getElementById('switchToRegister');
+  let firebaseClientPromise = null;
+
+  function getFirebaseClient() {
+    if (window.PrismaFirebase) return Promise.resolve(window.PrismaFirebase);
+    if (!firebaseClientPromise) {
+      firebaseClientPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          window.removeEventListener('prisma-firebase-ready', onReady);
+          reject(new Error('Não foi possível carregar o módulo do Firebase. Verifique sua conexão e tente novamente.'));
+        }, 12000);
+        function onReady() {
+          clearTimeout(timeout);
+          if (window.PrismaFirebase) resolve(window.PrismaFirebase);
+          else reject(new Error('O módulo do Firebase foi carregado sem inicializar.'));
+        }
+        window.addEventListener('prisma-firebase-ready', onReady, { once: true });
+      });
+    }
+    return firebaseClientPromise;
+  }
 
   function showLoginModal() {
     try {
@@ -703,17 +752,8 @@ document.addEventListener('DOMContentLoaded', () => {
           existingProfilesList.style.display = 'none';
           existingProfilesList.innerHTML = '';
         }
-        listLocalUsers().then((users) => {
-          if (!loginModal || loginModal.style.display === 'none') return;
-          if (!existingProfilesSection) return;
-          existingProfilesSection.style.display = users.length ? 'block' : 'none';
-          if (existingProfilesList && users.length) renderExistingProfiles(users);
-        }).catch((error) => {
-          console.error('Não foi possível carregar as contas locais:', error);
-          if (loginModal && loginModal.style.display !== 'none') {
-            showAuthFeedback('loginFeedback', error.message || 'Armazenamento local de contas indisponível neste navegador.', 'error');
-          }
-        });
+        if (existingProfilesSection) existingProfilesSection.style.display = 'none';
+        if (existingProfilesList) existingProfilesList.innerHTML = '';
         
         refreshIcons();
         setupPasswordToggleButtons();
@@ -802,7 +842,18 @@ document.addEventListener('DOMContentLoaded', () => {
       refreshIcons();
 
       try {
-        if (currentLocalUser) {
+        if (firebaseAuthenticated && currentLocalUser) {
+          const consent = {
+            essentialAccepted: true,
+            communicationsConsent: communications,
+            analyticsConsent: analytics,
+            openFinanceConsent: openFinance,
+            updatedAt: new Date().toISOString()
+          };
+          const firebase = await getFirebaseClient();
+          await firebase.saveConsent(currentLocalUser.id, consent);
+          firebaseConsent = consent;
+        } else if (currentLocalUser) {
           saveLocalConsent(currentLocalUser.id, {
             communicationsConsent: communications,
             analyticsConsent: analytics,
@@ -914,70 +965,18 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       hideLoginModal();
       hideAuthFeedback('regFeedback');
-      // Verificar se existem perfis cadastrados
-      const existingProfiles = getJSONFromStorage(BASE_STORAGE_KEYS.profiles, []);
-      
       // Mostrar modal de cadastro
       if (registrationModal) {
         registrationModal.style.display = 'flex';
         registrationModal.classList.add('show');
       }
       
-      // Atualizar título e subtítulo baseado na existência de perfis
       const titleElement = document.getElementById('registrationTitle');
       const subtitleElement = document.getElementById('registrationSubtitle');
-      
-      if (existingProfiles.length > 0) {
-        if (titleElement) {
-          titleElement.textContent = 'Bem-vindo de volta!';
-        }
-        if (subtitleElement) {
-          subtitleElement.textContent = 'Faça login em sua conta existente ou crie uma nova';
-        }
-      } else {
-        if (titleElement) {
-          titleElement.textContent = 'Crie sua conta';
-        }
-        if (subtitleElement) {
-          subtitleElement.textContent = 'Comece sua jornada financeira inteligente';
-        }
-      }
-      
-      // Se houver perfis existentes, mostrar a seção e expandir automaticamente
-      if (existingProfiles.length > 0) {
-        if (existingProfilesSection) {
-          existingProfilesSection.style.display = 'block';
-        } else {
-
-        }
-        
-        // Renderizar lista de perfis existentes
-        if (typeof renderExistingProfiles === 'function') {
-          renderExistingProfiles(existingProfiles);
-        } else {
-
-        }
-        
-        // Se houver perfis, expandir a lista automaticamente
-        if (existingProfilesList) {
-          existingProfilesList.style.display = 'block';
-
-          
-          // Atualizar texto do botão para refletir que está expandido
-          if (showExistingProfilesBtn) {
-            showExistingProfilesBtn.innerHTML = '<i data-lucide="chevron-up"></i> Ocultar perfis';
-            if (typeof refreshIcons === 'function') {
-              refreshIcons();
-            }
-          }
-        }
-      } else {
-        // Esconder seção se não houver perfis
-        if (existingProfilesSection) {
-          existingProfilesSection.style.display = 'none';
-
-        }
-      }
+      if (titleElement) titleElement.textContent = 'Crie sua conta';
+      if (subtitleElement) subtitleElement.textContent = 'Comece sua jornada financeira inteligente';
+      if (existingProfilesSection) existingProfilesSection.style.display = 'none';
+      if (existingProfilesList) existingProfilesList.innerHTML = '';
       
       if (typeof refreshIcons === 'function') {
         refreshIcons();
@@ -1067,19 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Atualizar lista de perfis existentes após criar novo perfil
   function updateExistingProfilesList() {
-    // Só atualizar se o modal de cadastro estiver visível
-    if (!registrationModal || registrationModal.style.display === 'none') {
-      return;
-    }
-    
-    const existingProfiles = getJSONFromStorage(BASE_STORAGE_KEYS.profiles, []);
-    
-    if (existingProfiles.length > 0 && existingProfilesSection) {
-      existingProfilesSection.style.display = 'block';
-      renderExistingProfiles(existingProfiles);
-    } else if (existingProfilesSection) {
-      existingProfilesSection.style.display = 'none';
-    }
+    if (existingProfilesSection) existingProfilesSection.style.display = 'none';
   }
 
   // Event listener for registration form
@@ -1163,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Cadastro local: apenas o hash PBKDF2 e o salt individual são persistidos.
+  // Firebase Auth owns credentials; the browser never stores passwords or password hashes.
   async function handleRegistrationProcess(name, email, password) {
     hideAuthFeedback('regFeedback');
     
@@ -1192,61 +1179,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (passInput) { passInput.style.borderColor = '#ef4444'; passInput.focus(); }
       return;
     }
-    
-    let accountCreated = false;
-    try {
-      const existing = await getLocalUserByEmail(cleanEmail);
-      if (existing) {
-        showAuthFeedback('regFeedback', 'Este e-mail já possui uma conta local. Faça login para continuar.', 'warning');
-        document.getElementById('regEmail')?.focus();
-        return;
-      }
 
-      showAuthFeedback('regFeedback', 'Protegendo sua senha e criando a conta neste dispositivo...', 'info');
-      const salt = window.crypto.getRandomValues(new Uint8Array(16));
-      const passwordHash = await deriveLocalPasswordHash(password, salt);
-      const accountId = makeLocalUserId();
-      const legacyProfiles = getJSONFromStorage(BASE_STORAGE_KEYS.profiles, []);
-      const linkedProfile = Array.isArray(legacyProfiles)
-        ? legacyProfiles.find((profile) => normalizeAuthEmail(profile.email) === cleanEmail)
-        : null;
-      const record = {
-        id: accountId,
-        profileId: linkedProfile?.id || accountId,
-        name: cleanName,
-        email: cleanEmail,
-        salt: bytesToBase64(salt),
-        passwordHash: bytesToBase64(passwordHash),
-        iterations: LOCAL_AUTH_PBKDF2_ITERATIONS,
-        createdAt: new Date().toISOString()
-      };
-      await addLocalUser(record);
-      accountCreated = true;
-      const user = publicLocalUser(record);
-      await activateLocalSession(record);
+    try {
+      showAuthFeedback('regFeedback', 'Criando sua conta segura no Firebase...', 'info');
+      const firebase = await getFirebaseClient();
+      await firebase.ready;
+      await firebase.register(cleanEmail, password, cleanName);
       hideRegistrationModal();
-      if (!readLocalConsent(user.id)) {
-        showLgpdScreen(user);
-        showToast(`Conta criada com sucesso, ${cleanName}. Revise suas preferências de privacidade.`);
-      } else {
-        startLocalAppAtDashboard();
-        showToast(`Bem-vindo ao Prisma, ${cleanName}. Conta criada neste dispositivo.`);
-      }
+      showToast(`Conta criada com sucesso, ${cleanName}.`);
     } catch (error) {
-      if (error.name === 'ConstraintError') {
-        showAuthFeedback('regFeedback', 'Este e-mail já possui uma conta local. Faça login para continuar.', 'warning');
-        const emailInput = document.getElementById('regEmail');
-        if (emailInput) emailInput.focus();
-      } else if (accountCreated) {
-        console.error('A conta local foi criada, mas a sessão não pôde ser iniciada:', error);
-        showAuthFeedback('regFeedback', 'A conta foi criada, mas a sessão não pôde ser iniciada. Entre com seu e-mail e senha.', 'warning');
-        showToast('Conta criada. Faça login para continuar.');
-        hideRegistrationModal();
-        showLoginModal();
-      } else {
-        console.error('Erro no cadastro local:', error);
-        showAuthFeedback('regFeedback', error.message || 'Não foi possível criar a conta neste navegador.', 'error');
-      }
+      console.error('Erro no cadastro Firebase:', error);
+      showAuthFeedback('regFeedback', authErrorMessage(error), 'error');
     }
   }
   
@@ -1289,20 +1232,67 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeReset(){if(resetPasswordModal){resetPasswordModal.style.display='none';resetPasswordModal.classList.remove('show');}}
   if(forgotPasswordBtn)forgotPasswordBtn.addEventListener('click',openResetRequest);
   if(backToLoginFromReset)backToLoginFromReset.addEventListener('click',e=>{e.preventDefault();closeReset();showLoginModal();});
-  if (forgotPasswordForm) forgotPasswordForm.addEventListener('submit', (e) => {
+  if (forgotPasswordForm) forgotPasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showToast('A recuperação por e-mail não está disponível para contas locais. A senha não pode ser redefinida sem um serviço confiável de verificação.');
+    const email = document.getElementById('forgotEmail')?.value.trim().toLowerCase() || '';
+    const feedback = document.getElementById('forgotFeedback');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showAuthFeedback('forgotFeedback', 'Informe um endereço de e-mail válido.', 'error');
+      return;
+    }
+    try {
+      const firebase = await getFirebaseClient();
+      await firebase.resetPassword(email);
+      showAuthFeedback('forgotFeedback', 'Se houver uma conta para este e-mail, o Firebase enviará as instruções de recuperação.', 'success');
+    } catch (error) {
+      console.error('Erro ao solicitar redefinição de senha:', error);
+      showAuthFeedback('forgotFeedback', authErrorMessage(error), 'error');
+    }
   });
-  if (resetPasswordForm) resetPasswordForm.addEventListener('submit', (e) => {
+  if (resetPasswordForm) resetPasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showToast('Este link de redefinição depende do serviço de autenticação do servidor e não altera contas locais.');
+    const query = new URLSearchParams(location.search);
+    const actionCode = query.get('oobCode');
+    const password = document.getElementById('resetPassword')?.value || '';
+    const confirmation = document.getElementById('resetPasswordConfirm')?.value || '';
+    if (!actionCode) {
+      showAuthFeedback('resetFeedback', 'O link de redefinição não contém um código Firebase válido.', 'error');
+      return;
+    }
+    if (password.length < 8) {
+      showAuthFeedback('resetFeedback', 'A senha deve ter pelo menos 8 caracteres.', 'error');
+      return;
+    }
+    if (password !== confirmation) {
+      showAuthFeedback('resetFeedback', 'As senhas não coincidem.', 'error');
+      return;
+    }
+    try {
+      const firebase = await getFirebaseClient();
+      await firebase.applyPasswordReset(actionCode, password);
+      history.replaceState(null, '', location.pathname);
+      closeReset();
+      showLoginModal();
+      showAuthFeedback('loginFeedback', 'Senha redefinida. Entre com sua nova senha.', 'success');
+    } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
+      showAuthFeedback('resetFeedback', authErrorMessage(error), 'error');
+    }
   });
   const resetToken = new URLSearchParams(location.search).get('reset_token');
   if (resetToken && resetPasswordModal) {
-    document.getElementById('resetSubtitle').textContent = 'Este link usa o serviço de autenticação do servidor. Contas locais não podem ser redefinidas por e-mail.';
+    document.getElementById('resetSubtitle').textContent = 'Este link pertence ao sistema anterior. Solicite uma nova redefinição pelo Firebase.';
     resetPasswordForm.style.display = 'none';
     forgotPasswordForm.style.display = 'block';
     resetPasswordModal.style.display = 'flex';
+  const firebaseActionCode = new URLSearchParams(location.search).get('oobCode');
+  if (firebaseActionCode && resetPasswordModal) {
+    document.getElementById('resetSubtitle').textContent = 'Defina uma nova senha para sua conta Firebase.';
+    forgotPasswordForm.style.display = 'none';
+    resetPasswordForm.style.display = 'block';
+    resetPasswordModal.style.display = 'flex';
+    resetPasswordModal.classList.add('show');
+  }
     resetPasswordModal.classList.add('show');
   }
 
@@ -1324,7 +1314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Função para processar o login com autenticação real no banco SQLite
+  // Sign in through Firebase Authentication; legacy browser accounts are only consulted for data migration.
   async function handleLoginProcess(email, password) {
     hideAuthFeedback('loginFeedback');
     const cleanEmail = (email || '').trim().toLowerCase();
@@ -1347,34 +1337,13 @@ document.addEventListener('DOMContentLoaded', () => {
       refreshIcons();
     }
     try {
-      showAuthFeedback('loginFeedback', 'Verificando suas credenciais neste dispositivo...', 'info');
-      const record = await getLocalUserByEmail(cleanEmail);
-      if (!record) {
-        showAuthFeedback('loginFeedback', 'E-mail ou senha incorretos. Verifique suas credenciais.', 'error');
-        document.getElementById('loginPassword')?.focus();
-        return;
-      }
-
-      const actualHash = await deriveLocalPasswordHash(password, base64ToBytes(record.salt), record.iterations);
-      if (!localPasswordMatches(base64ToBytes(record.passwordHash), actualHash)) {
-        showAuthFeedback('loginFeedback', 'E-mail ou senha incorretos. Verifique suas credenciais.', 'error');
-        document.getElementById('loginPassword')?.focus();
-        return;
-      }
-
-      const user = publicLocalUser(record);
-      await activateLocalSession(record);
+      showAuthFeedback('loginFeedback', 'Verificando sua conta no Firebase...', 'info');
+      const firebase = await getFirebaseClient();
+      await firebase.login(cleanEmail, password);
       hideLoginModal();
-      if (!readLocalConsent(user.id)) {
-        showLgpdScreen(user);
-        showToast(`Bem-vindo de volta, ${user.name}! Revise suas preferências de privacidade.`);
-      } else {
-        startLocalAppAtDashboard();
-        showToast(`Bem-vindo de volta, ${user.name}!`);
-      }
     } catch (error) {
-      console.error('Erro no login local:', error);
-      showAuthFeedback('loginFeedback', error.message || 'Não foi possível verificar a conta neste navegador.', 'error');
+      console.error('Erro no login Firebase:', error);
+      showAuthFeedback('loginFeedback', authErrorMessage(error), 'error');
     } finally {
       if (submit) {
         submit.disabled = false;
@@ -1784,12 +1753,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ==================== REAL DATABASE / API PERSISTENCE ====================
   const LOCAL_AUTH_DB_NAME = 'prisma-local-auth';
-  const LOCAL_AUTH_DB_VERSION = 1;
   const LOCAL_AUTH_USERS_STORE = 'users';
   const LOCAL_AUTH_SESSION_KEY = 'prisma_local_session_v1';
-  const LOCAL_AUTH_PBKDF2_ITERATIONS = 600000;
   let localAuthDatabasePromise = null;
   let isAuthenticated = false;
+  let firebaseAuthenticated = false;
+  let firebaseRevision = null;
+  let firebaseUnsubscribe = null;
+  let firebaseAuthUnsubscribe = null;
+  let firebaseActivationPromise = null;
+  let firebaseConsent = null;
+  let firebaseApplyingState = false;
   let currentLocalUser = null;
   let serverAuthenticated = false;
   let currentServerUser = null;
@@ -1797,24 +1771,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let serverSyncInFlight = false;
   let serverSyncPending = false;
 
-  function openLocalAuthDatabase() {
-    if (!window.indexedDB) {
-      return Promise.reject(new Error('Este navegador não oferece suporte ao armazenamento local de contas.'));
-    }
+  function openLegacyAuthDatabase() {
+    if (!window.indexedDB) throw new Error('O armazenamento IndexedDB legado não está disponível para migração.');
     if (localAuthDatabasePromise) return localAuthDatabasePromise;
 
     localAuthDatabasePromise = new Promise((resolve, reject) => {
-      const request = window.indexedDB.open(LOCAL_AUTH_DB_NAME, LOCAL_AUTH_DB_VERSION);
+      const request = window.indexedDB.open(LOCAL_AUTH_DB_NAME);
       request.onupgradeneeded = () => {
-        const database = request.result;
-        if (!database.objectStoreNames.contains(LOCAL_AUTH_USERS_STORE)) {
-          const users = database.createObjectStore(LOCAL_AUTH_USERS_STORE, { keyPath: 'id' });
-          users.createIndex('email', 'email', { unique: true });
-        }
+        request.transaction.abort();
+        reject(new Error('Não há uma base de contas locais existente para migrar.'));
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(new Error('Não foi possível abrir o armazenamento local de contas.'));
-      request.onblocked = () => reject(new Error('Feche outras abas do Prisma para atualizar o armazenamento de contas.'));
+      request.onerror = () => reject(new Error('Não foi possível ler a base de contas locais legada.'));
+      request.onblocked = () => reject(new Error('Feche outras abas do Prisma para ler a base local legada.'));
     }).catch((error) => {
       localAuthDatabasePromise = null;
       throw error;
@@ -1823,10 +1792,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return localAuthDatabasePromise;
   }
 
-  async function localAuthStoreRequest(mode, operation) {
-    const database = await openLocalAuthDatabase();
+  async function readLegacyAuthStore(operation) {
+    const database = await openLegacyAuthDatabase();
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction(LOCAL_AUTH_USERS_STORE, mode);
+      const transaction = database.transaction(LOCAL_AUTH_USERS_STORE, 'readonly');
       let result;
       let request;
       try {
@@ -1836,10 +1805,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       request.onsuccess = () => { result = request.result; };
-      request.onerror = () => reject(request.error || new Error('Falha ao acessar uma conta local.'));
+      request.onerror = () => reject(request.error || new Error('Falha ao ler a conta local legada.'));
+      transaction.onerror = () => reject(transaction.error || new Error('Falha ao ler a conta local legada.'));
+      transaction.onabort = () => reject(transaction.error || new Error('A leitura da conta local legada foi cancelada.'));
       transaction.oncomplete = () => resolve(result);
-      transaction.onerror = () => reject(transaction.error || new Error('Falha ao gravar os dados da conta local.'));
-      transaction.onabort = () => reject(transaction.error || new Error('A operação com a conta local foi cancelada.'));
     });
   }
 
@@ -1847,119 +1816,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return String(email || '').trim().toLowerCase();
   }
 
-  function makeLocalUserId() {
-    if (!window.crypto?.getRandomValues) throw new Error('Este navegador não oferece geração segura de identificadores.');
-    const bytes = window.crypto.getRandomValues(new Uint8Array(16));
-    return `local_${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
-  }
-
-  function bytesToBase64(bytes) {
-    return btoa(String.fromCharCode(...new Uint8Array(bytes)));
-  }
-
-  function base64ToBytes(value) {
-    return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
-  }
-
-  async function deriveLocalPasswordHash(password, salt, iterations = LOCAL_AUTH_PBKDF2_ITERATIONS) {
-    if (!window.crypto?.subtle) {
-      throw new Error('Autenticação local exige um navegador atualizado em contexto seguro (HTTPS ou arquivo local).');
-    }
-    const keyMaterial = await window.crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(password),
-      'PBKDF2',
-      false,
-      ['deriveBits']
-    );
-    return new Uint8Array(await window.crypto.subtle.deriveBits({
-      name: 'PBKDF2',
-      hash: 'SHA-256',
-      salt,
-      iterations
-    }, keyMaterial, 256));
-  }
-
-  function localPasswordMatches(expected, actual) {
-    if (expected.length !== actual.length) return false;
-    let difference = 0;
-    for (let index = 0; index < expected.length; index += 1) {
-      difference |= expected[index] ^ actual[index];
-    }
-    return difference === 0;
-  }
-
-  function publicLocalUser(record) {
-    return {
-      id: record.id,
-      profileId: record.profileId || record.id,
-      name: record.name,
-      email: record.email,
-      role: 'USER',
-      createdAt: record.createdAt,
-      authMethod: 'local'
-    };
-  }
-
   async function getLocalUserByEmail(email) {
-    return localAuthStoreRequest('readonly', (users) => users.index('email').get(normalizeAuthEmail(email)));
-  }
-
-  async function getLocalUserById(id) {
-    return localAuthStoreRequest('readonly', (users) => users.get(id));
-  }
-
-  async function listLocalUsers() {
-    const users = await localAuthStoreRequest('readonly', (store) => store.getAll());
-    return users.map(publicLocalUser).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  }
-
-  async function addLocalUser(record) {
-    return localAuthStoreRequest('readwrite', (users) => users.add(record));
-  }
-
-  async function updateLocalUser(record) {
-    return localAuthStoreRequest('readwrite', (users) => users.put(record));
-  }
-
-  function readLocalSessionId() {
-    for (const storage of [window.localStorage, window.sessionStorage]) {
-      try {
-        const session = JSON.parse(storage.getItem(LOCAL_AUTH_SESSION_KEY) || 'null');
-        if (session && typeof session.userId === 'string') return session.userId;
-      } catch (error) {
-        console.warn('Sessão local inválida ou indisponível:', error);
-      }
-    }
-    return null;
-  }
-
-  function persistLocalSession(userId) {
-    const session = JSON.stringify({ userId, createdAt: new Date().toISOString() });
-    try {
-      window.localStorage.setItem(LOCAL_AUTH_SESSION_KEY, session);
-      window.sessionStorage.removeItem(LOCAL_AUTH_SESSION_KEY);
-      return;
-    } catch (storageError) {
-      try {
-        window.sessionStorage.setItem(LOCAL_AUTH_SESSION_KEY, session);
-      } catch (sessionError) {
-        throw new Error('O navegador bloqueou o armazenamento da sessão. Permita o armazenamento local e tente novamente.', { cause: sessionError || storageError });
-      }
-    }
+    return readLegacyAuthStore((users) => users.index('email').get(normalizeAuthEmail(email)));
   }
 
   function clearLocalAuthSession() {
-    for (const storage of [window.localStorage, window.sessionStorage]) {
-      try { storage.removeItem(LOCAL_AUTH_SESSION_KEY); } catch (error) {
-        console.warn('Não foi possível remover uma cópia da sessão local:', error);
-      }
-    }
     try {
-      window.localStorage.removeItem(BASE_STORAGE_KEYS.currentProfileId);
-      window.localStorage.removeItem('prisma_current_user');
+      localStorage.removeItem(LOCAL_AUTH_SESSION_KEY);
+      window.sessionStorage.removeItem(LOCAL_AUTH_SESSION_KEY);
+      localStorage.removeItem(BASE_STORAGE_KEYS.currentProfileId);
+      localStorage.removeItem('prisma_current_user');
     } catch (error) {
-      console.warn('Não foi possível limpar os metadados temporários da sessão:', error);
+      console.warn('Não foi possível limpar os metadados locais legados:', error);
     }
   }
 
@@ -1981,59 +1849,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Não foi possível ler as preferências locais de privacidade:', error);
       return null;
     }
-  }
-
-  function createOrReuseLocalFinancialProfile(user) {
-    profiles = getJSONFromStorage(BASE_STORAGE_KEYS.profiles, []);
-    const profileId = user.profileId || user.id;
-    let profile = profiles.find((candidate) => String(candidate.id) === String(profileId));
-    if (!profile) {
-      profile = {
-        id: profileId,
-        name: user.name,
-        email: user.email,
-        type: 'fisica',
-        doc: '',
-        saldo: 0,
-        salario: 0,
-        despesas: 0,
-        createdAt: user.createdAt
-      };
-      profiles.push(profile);
-      setJSONToStorage(BASE_STORAGE_KEYS.profiles, profiles);
-    }
-    return profile;
-  }
-
-  async function activateLocalSession(user, { saveSession = true } = {}) {
-    if (saveSession) persistLocalSession(user.id);
-    isAuthenticated = true;
-    serverAuthenticated = false;
-    currentLocalUser = publicLocalUser(user);
-    currentServerUser = null;
-    updateRoleUI(null);
-
-    const profile = createOrReuseLocalFinancialProfile(currentLocalUser);
-    currentLocalUser.profileId = profile.id;
-    currentProfileId = profile.id;
-    setToStorage(BASE_STORAGE_KEYS.currentProfileId, profile.id);
-    STORAGE_KEYS = getProfileStorageKeys(profile.id);
-    currentProfile = profile;
-    loadProfileData(profile.id);
-    persistAuthenticatedUser(currentLocalUser);
-    syncAuthenticatedUserUI();
-  }
-
-  async function restoreLocalSession() {
-    const userId = readLocalSessionId();
-    if (!userId) return false;
-    const user = await getLocalUserById(userId);
-    if (!user) {
-      clearLocalAuthSession();
-      return false;
-    }
-    await activateLocalSession(user, { saveSession: false });
-    return true;
   }
 
   function getApiBaseUrl(){
@@ -2090,9 +1905,41 @@ document.addEventListener('DOMContentLoaded', () => {
   function collectServerState(){
     let notifications=[]; try { const r=localStorage.getItem('prisma_notifications_v2'); notifications=r?((JSON.parse(r).notifications)||[]):[]; } catch(_) {}
     let education={completed:[],points:0,challengeDone:false}; try { education=JSON.parse(localStorage.getItem(getEducationStorageKey())||'{}'); } catch(_) {}
-    let prismaAiPlan=[]; try { prismaAiPlan=JSON.parse(localStorage.getItem(profileKey('prisma_ai_savings_plan'))||'[]'); } catch(_) {}
+    education.progress = getJSONFromStorage(getScopedStorageKey('prisma_trilha_progresso_v1'), {});
+    let prismaAiPlan=[]; try { prismaAiPlan=JSON.parse(localStorage.getItem(getScopedStorageKey('prisma_ai_savings_plan'))||'[]'); } catch(_) {}
     let healthScore=null; try { healthScore=JSON.parse(localStorage.getItem(getAiHealthScoreStorageKey())||'null'); } catch(_) {}
-    return { receitas:Array.isArray(receitas)?receitas:[], despesas:Array.isArray(despesas)?despesas:[], contas:Array.isArray(contas)?contas:[], cartoes:Array.isArray(cartoes)?cartoes:[], investimentos:Array.isArray(investimentos)?investimentos:[], goals:Array.isArray(goals)?goals:[], categories:Array.isArray(categories)?categories:[], summary:summaryData||{saldoAtual:saldoAtual||0,salarioMensal:salarioMensal||0}, monthlyFlow:{inc:incomeData||Array(12).fill(0),exp:expenseData||Array(12).fill(0)}, education:{completed:education.completed||[],points:education.points||0,challengeDone:!!education.challengeDone}, notifications, prismaAi:{analysis:window.__currentAiAnalysis||null,recommendations:window.__currentAiRecommendations||[],savingsPlan:prismaAiPlan,healthScore,history:[]} };
+    const settings = {
+      categoryBudgets: getJSONFromStorage(getScopedStorageKey('prisma_category_budgets_v1'), {}),
+      alertsMeta: getJSONFromStorage(getScopedStorageKey('prisma_alerts_meta_v1'), {}),
+      transfers: getJSONFromStorage(getScopedStorageKey('prisma_transferencias'), [])
+    };
+    const profile = currentProfile ? {
+      id: currentProfile.id,
+      name: currentProfile.name || '',
+      email: currentProfile.email || '',
+      type: currentProfile.type || 'fisica',
+      doc: currentProfile.doc || '',
+      saldo: Number(currentProfile.saldo) || 0,
+      salario: Number(currentProfile.salario) || 0,
+      despesas: Number(currentProfile.despesas) || 0,
+      createdAt: currentProfile.createdAt || null
+    } : {};
+    return {
+      profile,
+      receitas:Array.isArray(receitas)?receitas:[],
+      despesas:Array.isArray(despesas)?despesas:[],
+      contas:Array.isArray(contas)?contas:[],
+      cartoes:Array.isArray(cartoes)?cartoes:[],
+      investimentos:Array.isArray(investimentos)?investimentos:[],
+      goals:Array.isArray(goals)?goals:[],
+      categories:Array.isArray(categories)?categories:[],
+      summary:summaryData||{saldoAtual:saldoAtual||0,salarioMensal:salarioMensal||0},
+      monthlyFlow:{inc:incomeData||Array(12).fill(0),exp:expenseData||Array(12).fill(0)},
+      education:{completed:education.completed||[],points:education.points||0,challengeDone:!!education.challengeDone,progress:education.progress||{}},
+      settings,
+      notifications,
+      prismaAi:{analysis:window.__currentAiAnalysis||null,recommendations:window.__currentAiRecommendations||[],savingsPlan:prismaAiPlan,healthScore,history:[]}
+    };
   }
   function hasFinancialData(state){return ['receitas','despesas','contas','cartoes','investimentos','goals'].some(k=>Array.isArray(state?.[k])&&state[k].length>0)}
   function profileFromServerUser(user){return {id:user.id,name:user.name,email:user.email,type:'fisica',doc:'',saldo:0,salario:0,despesas:0,createdAt:user.createdAt}}
@@ -2127,22 +1974,226 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function applyServerState(state,user){
-    hideWelcomeScreen();
-    updateRoleUI(user);
-    if(user&&typeof persistAuthenticatedUser==='function')persistAuthenticatedUser(user);
-    const profile=profileFromServerUser(user); profiles=[profile]; currentProfileId=user.id; setToStorage(BASE_STORAGE_KEYS.currentProfileId,user.id); setToStorage(BASE_STORAGE_KEYS.userRegistered,'true'); setJSONToStorage(BASE_STORAGE_KEYS.profiles,profiles); STORAGE_KEYS=getProfileStorageKeys(user.id);
-    const put=(k,v)=>setJSONToStorage(k,v); put(STORAGE_KEYS.receitas,state.receitas||[]); put(STORAGE_KEYS.despesas,state.despesas||[]); put(STORAGE_KEYS.contas,state.contas||[]); put(STORAGE_KEYS.cartoes,state.cartoes||[]); put(STORAGE_KEYS.investimentos,state.investimentos||[]); put(STORAGE_KEYS.goals,state.goals||[]); put(STORAGE_KEYS.categories,state.categories||[]); put(STORAGE_KEYS.summary,state.summary||{saldoAtual:0,salarioMensal:0}); put(STORAGE_KEYS.monthlyFlow,state.monthlyFlow||{inc:Array(12).fill(0),exp:Array(12).fill(0)}); put(getEducationStorageKey(),state.education||{completed:[],points:0,challengeDone:false}); try{localStorage.setItem('prisma_notifications_v2',JSON.stringify({notifications:state.notifications||[]}))}catch(_){}
-    window.__currentAiAnalysis=state.prismaAi?.analysis||null;
-    window.__currentAiRecommendations=Array.isArray(state.prismaAi?.recommendations)?state.prismaAi.recommendations:[];
-    window.__currentAiHealthScore=state.prismaAi?.healthScore||getJSONFromStorage(getAiHealthScoreStorageKey(),null);
-    if(window.__currentAiHealthScore){setJSONToStorage(getAiHealthScoreStorageKey(),window.__currentAiHealthScore);}
-    renderSavedFinancialHealthScore(window.__currentAiHealthScore);
-    if(state.prismaAi&&state.prismaAi.savingsPlan) { try{localStorage.setItem(profileKey('prisma_ai_savings_plan'),JSON.stringify(state.prismaAi.savingsPlan));}catch(_){} }
-    serverAuthenticated=true; loadProfileData(user.id); profiles=[profile]; currentProfileId=user.id; currentProfile=profile; renderProfiles(); renderCurrentProfile();
-    if(typeof syncAuthenticatedUserUI==='function')syncAuthenticatedUserUI();
+    firebaseApplyingState=true;
+    try {
+      isAuthenticated=true;
+      firebaseAuthenticated=true;
+      serverAuthenticated=false;
+      currentLocalUser=user;
+      hideWelcomeScreen();
+      updateRoleUI(user);
+      if(user&&typeof persistAuthenticatedUser==='function')persistAuthenticatedUser(user);
+      const profile={...profileFromServerUser(user), ...(state.profile && typeof state.profile === 'object' ? state.profile : {})};
+      profile.id=user.id; profile.email=user.email; profile.name=user.name || profile.name;
+      profiles=[profile]; currentProfileId=user.id; currentProfile=profile;
+      setToStorage(BASE_STORAGE_KEYS.currentProfileId,user.id);
+      STORAGE_KEYS=getProfileStorageKeys(user.id);
+      const put=(k,v)=>setJSONToStorage(k,v);
+      put(STORAGE_KEYS.receitas,state.receitas||[]);
+      put(STORAGE_KEYS.despesas,state.despesas||[]);
+      put(STORAGE_KEYS.contas,state.contas||[]);
+      put(STORAGE_KEYS.cartoes,state.cartoes||[]);
+      put(STORAGE_KEYS.investimentos,state.investimentos||[]);
+      put(STORAGE_KEYS.goals,state.goals||[]);
+      put(STORAGE_KEYS.categories,state.categories||[]);
+      put(STORAGE_KEYS.summary,state.summary||{saldoAtual:0,salarioMensal:0});
+      put(STORAGE_KEYS.monthlyFlow,state.monthlyFlow||{inc:Array(12).fill(0),exp:Array(12).fill(0)});
+      put(getEducationStorageKey(),state.education||{completed:[],points:0,challengeDone:false});
+      put(getScopedStorageKey('prisma_trilha_progresso_v1'),state.education?.progress||{});
+      put(getScopedStorageKey('prisma_category_budgets_v1'),state.settings?.categoryBudgets||{});
+      put(getScopedStorageKey('prisma_alerts_meta_v1'),state.settings?.alertsMeta||{});
+      put(getScopedStorageKey('prisma_transferencias'),state.settings?.transfers||[]);
+      try{localStorage.setItem('prisma_notifications_v2',JSON.stringify({notifications:state.notifications||[]}))}catch(_){}
+      window.__currentAiAnalysis=state.prismaAi?.analysis||null;
+      window.__currentAiRecommendations=Array.isArray(state.prismaAi?.recommendations)?state.prismaAi.recommendations:[];
+      window.__currentAiHealthScore=state.prismaAi?.healthScore||getJSONFromStorage(getAiHealthScoreStorageKey(),null);
+      if(window.__currentAiHealthScore){setJSONToStorage(getAiHealthScoreStorageKey(),window.__currentAiHealthScore);}
+      renderSavedFinancialHealthScore(window.__currentAiHealthScore);
+      if(state.prismaAi&&state.prismaAi.savingsPlan) {
+        put(getScopedStorageKey('prisma_ai_savings_plan'),state.prismaAi.savingsPlan);
+      }
+      loadProfileData(user.id);
+      profiles=[profile]; currentProfileId=user.id; currentProfile=profile; renderProfiles(); renderCurrentProfile();
+      if(typeof syncAuthenticatedUserUI==='function')syncAuthenticatedUserUI();
+    } finally {
+      firebaseApplyingState=false;
+    }
   }
-  async function syncServerStateNow(){if(!serverAuthenticated||!currentProfileId){serverSyncPending=true;return} if(serverSyncInFlight){serverSyncPending=true;return} serverSyncInFlight=true;serverSyncPending=false;try{await apiFetch('/api/state',{method:'PUT',body:JSON.stringify(collectServerState())})}catch(e){console.error('Falha ao sincronizar o estado do Prisma:',e);if(typeof showToast==='function')showToast('Os dados permanecem salvos neste dispositivo, mas não foi possível sincronizá-los com o servidor.')}finally{serverSyncInFlight=false;if(serverSyncPending)scheduleServerSync()}}
-  function scheduleServerSync(){if(!serverAuthenticated)return;clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(syncServerStateNow,700)}
+  function defaultFirebaseState() {
+    return {
+      profile: {}, receitas: [], despesas: [], contas: [], cartoes: [], investimentos: [],
+      goals: [], categories: [], summary: { saldoAtual: 0, salarioMensal: 0 },
+      monthlyFlow: { inc: Array(12).fill(0), exp: Array(12).fill(0) },
+      education: { completed: [], points: 0, challengeDone: false, progress: {} },
+      settings: { categoryBudgets: {}, alertsMeta: {}, transfers: [] },
+      notifications: [],
+      prismaAi: { analysis: null, recommendations: [], savingsPlan: [], healthScore: null, history: [] }
+    };
+  }
+
+  function normalizeFirebaseState(state) {
+    const defaults = defaultFirebaseState();
+    if (!state || typeof state !== 'object' || Array.isArray(state)) return defaults;
+    return {
+      ...defaults,
+      ...state,
+      profile: state.profile && typeof state.profile === 'object' && !Array.isArray(state.profile) ? state.profile : defaults.profile,
+      receitas: Array.isArray(state.receitas) ? state.receitas : defaults.receitas,
+      despesas: Array.isArray(state.despesas) ? state.despesas : defaults.despesas,
+      contas: Array.isArray(state.contas) ? state.contas : defaults.contas,
+      cartoes: Array.isArray(state.cartoes) ? state.cartoes : defaults.cartoes,
+      investimentos: Array.isArray(state.investimentos) ? state.investimentos : defaults.investimentos,
+      goals: Array.isArray(state.goals) ? state.goals : defaults.goals,
+      categories: Array.isArray(state.categories) ? state.categories : defaults.categories,
+      notifications: Array.isArray(state.notifications) ? state.notifications : defaults.notifications,
+      settings: state.settings && typeof state.settings === 'object' && !Array.isArray(state.settings) ? state.settings : defaults.settings,
+      summary: state.summary && typeof state.summary === 'object' ? state.summary : defaults.summary,
+      monthlyFlow: state.monthlyFlow && typeof state.monthlyFlow === 'object' ? state.monthlyFlow : defaults.monthlyFlow,
+      education: state.education && typeof state.education === 'object' ? state.education : defaults.education,
+      prismaAi: state.prismaAi && typeof state.prismaAi === 'object' ? state.prismaAi : defaults.prismaAi
+    };
+  }
+
+  async function activateFirebaseSession(firebaseUser, firebase) {
+    if (firebaseAuthenticated && currentLocalUser?.id === firebaseUser.uid) return;
+    if (firebaseActivationPromise) return firebaseActivationPromise;
+
+    firebaseActivationPromise = (async () => {
+      const email = String(firebaseUser.email || '').trim().toLowerCase();
+      const localProfiles = getJSONFromStorage(BASE_STORAGE_KEYS.profiles, []);
+      let legacyProfile = Array.isArray(localProfiles)
+        ? localProfiles.find((profile) => normalizeAuthEmail(profile.email) === email)
+        : null;
+      let legacyUser = null;
+      if (!legacyProfile) {
+        try {
+          legacyUser = await getLocalUserByEmail(email);
+          if (legacyUser?.profileId) {
+            legacyProfile = { id: legacyUser.profileId, email: legacyUser.email, name: legacyUser.name };
+          }
+        } catch (error) {
+          console.warn('O armazenamento local legado não está disponível para migração:', error);
+        }
+      }
+
+      const account = {
+        id: firebaseUser.uid,
+        uid: firebaseUser.uid,
+        email,
+        name: firebaseUser.displayName || legacyProfile?.name || email,
+        photoURL: firebaseUser.photoURL || null,
+        createdAt: firebaseUser.metadata?.creationTime || new Date().toISOString()
+      };
+      const remote = await firebase.loadUserData(firebaseUser.uid);
+      let state;
+
+      if (remote.state) {
+        state = normalizeFirebaseState(remote.state);
+      } else {
+        state = defaultFirebaseState();
+        if (legacyProfile?.id) {
+          const shouldMigrate = window.confirm(
+            `Encontramos dados locais associados a ${email}. Deseja copiá-los para esta conta Firebase? Os dados locais originais serão preservados.`
+          );
+          if (shouldMigrate) {
+            loadProfileData(legacyProfile.id);
+            state = collectServerState();
+          }
+        }
+      }
+
+      firebaseConsent = remote.consent || null;
+      applyServerState(state, account);
+      if (!remote.profile) await firebase.saveProfile(firebaseUser, { created: true });
+      if (!remote.state) {
+        firebaseRevision = await firebase.saveState(firebaseUser.uid, state, remote.revision);
+      } else {
+        firebaseRevision = remote.revision;
+      }
+
+      if (firebaseUnsubscribe) firebaseUnsubscribe();
+      firebaseUnsubscribe = firebase.watchState(firebaseUser.uid, (incomingState, revision) => {
+        if (!incomingState || !revision || revision === firebaseRevision) return;
+        if (serverSyncPending || serverSyncInFlight) {
+          showToast('Há alterações locais e remotas ao mesmo tempo. Recarregue a página para resolver o conflito sem sobrescrever dados.', 'warning');
+          return;
+        }
+        firebaseRevision = revision;
+        applyServerState(normalizeFirebaseState(incomingState), account);
+      }, (error) => {
+        console.error('Falha ao acompanhar a sincronização Firestore:', error);
+        showToast('A sincronização em tempo real foi interrompida. Verifique a conexão.');
+      });
+
+      hideLoginModal();
+      hideRegistrationModal();
+      const appElement = document.getElementById('mainApp') || document.querySelector('.app');
+      if (appElement) appElement.style.display = 'block';
+      hideWelcomeScreen();
+      if (!firebaseConsent) showLgpdScreen(account);
+      else if (!restoreSectionFromLocation()) window.navigateToSection?.('dashboard', { updateHistory: false });
+
+      if ((await firebase.getPersistenceMode()) === 'session') {
+        showToast('O navegador bloqueou a sessão persistente. Sua conta ficará conectada somente nesta sessão.', 'warning');
+      }
+      serverSyncPending = false;
+      showToast(`Bem-vindo ao Prisma, ${account.name}.`);
+    })();
+
+    try {
+      await firebaseActivationPromise;
+    } finally {
+      firebaseActivationPromise = null;
+    }
+  }
+
+  async function syncServerStateNow() {
+    if (!firebaseAuthenticated || !currentProfileId) return false;
+    if (serverSyncInFlight) {
+      serverSyncPending = true;
+      return false;
+    }
+    serverSyncInFlight = true;
+    serverSyncPending = false;
+    try {
+      const firebase = await getFirebaseClient();
+      firebaseRevision = await firebase.saveState(currentLocalUser.id, collectServerState(), firebaseRevision);
+      return true;
+    } catch (error) {
+      console.error('Falha ao sincronizar o estado do Prisma com Firestore:', error);
+      if (typeof showToast === 'function') showToast(authErrorMessage(error), 'warning');
+      return false;
+    } finally {
+      serverSyncInFlight = false;
+      if (serverSyncPending) scheduleServerSync();
+    }
+  }
+
+  function scheduleServerSync() {
+    if (!firebaseAuthenticated) return;
+    serverSyncPending = true;
+    clearTimeout(serverSyncTimer);
+    serverSyncTimer = setTimeout(() => { void syncServerStateNow(); }, 700);
+  }
+
+  const firebaseSyncedStorageKeys = [
+    'prisma_profile_data', 'prisma_receitas_data', 'prisma_despesas_data',
+    'prisma_contas_data', 'prisma_cartoes_data', 'prisma_investimentos_data',
+    'prisma_goals_data', 'prisma_summary_data', 'prisma_monthly_flow_data',
+    'prisma_categories_data', 'prisma_education_data', 'prisma_trilha_progresso_v1',
+    'prisma_category_budgets_v1', 'prisma_alerts_meta_v1', 'prisma_transferencias',
+    'prisma_ai_savings_plan', 'prisma_ai_health_score', 'prisma_notifications_v2',
+    'prisma_recomendacoes_aplicadas'
+  ];
+  window.addEventListener('prisma-storage-changed', (event) => {
+    const key = event.detail?.key;
+    if (!firebaseAuthenticated || firebaseApplyingState || typeof key !== 'string') return;
+    if (firebaseSyncedStorageKeys.some((baseKey) => key === baseKey || key.startsWith(`${baseKey}_`))) {
+      scheduleServerSync();
+    }
+  });
+  window.PrismaScheduleServerSync = scheduleServerSync;
+
   // Limpar localStorage completamente para permitir que o usuário insira seus próprios dados
   function limparTodosDados() {
     // Limpar dados do perfil atual
@@ -2151,7 +2202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Limpar dados globais
-    localStorage.removeItem('prisma_recomendacoes_aplicadas');
+    localStorage.removeItem(getScopedStorageKey('prisma_recomendacoes_aplicadas'));
     
     // Recarregar dados vazios
     receitas = [];
@@ -2170,6 +2221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     economiaMes = 0;
     
     // Atualizar interface
+    scheduleServerSync();
     recalculateAll();
     showToast('Todos os dados foram limpos com sucesso.');
   }
@@ -2187,7 +2239,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==================== LGPD SETTINGS CARD ====================
   async function loadLgpdSettings() {
     try {
-      const data = currentLocalUser
+      const data = firebaseAuthenticated
+        ? { hasConsent: Boolean(firebaseConsent), consent: firebaseConsent }
+        : currentLocalUser
         ? (() => {
             const consent = readLocalConsent(currentLocalUser.id);
             return { hasConsent: Boolean(consent), consent };
@@ -2214,7 +2268,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lgpdOF) lgpdOF.checked = Boolean(data.consent.openFinanceConsent);
       }
     } catch (error) {
-      // User might not be authenticated yet — ignore silently
+      console.error('Não foi possível carregar as preferências de privacidade:', error);
+      showToast('Não foi possível carregar as preferências de privacidade.');
     }
   }
 
@@ -2234,7 +2289,16 @@ document.addEventListener('DOMContentLoaded', () => {
           analyticsConsent: analytics,
           openFinanceConsent: openFinance
         };
-        if (currentLocalUser) {
+        if (firebaseAuthenticated && currentLocalUser) {
+          const consent = {
+            essentialAccepted: true,
+            ...preferences,
+            updatedAt: new Date().toISOString()
+          };
+          const firebase = await getFirebaseClient();
+          await firebase.saveConsent(currentLocalUser.id, consent);
+          firebaseConsent = consent;
+        } else if (currentLocalUser) {
           saveLocalConsent(currentLocalUser.id, preferences);
         } else {
           await apiFetch('/api/lgpd/consent', {
@@ -2256,7 +2320,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (lgpdViewHistoryBtn) {
     lgpdViewHistoryBtn.addEventListener('click', async () => {
       try {
-        const data = currentLocalUser
+        const data = firebaseAuthenticated
+          ? { history: firebaseConsent ? [firebaseConsent] : [] }
+          : currentLocalUser
           ? { history: readLocalConsent(currentLocalUser.id) ? [readLocalConsent(currentLocalUser.id)] : [] }
           : await apiFetch('/api/lgpd/history');
         if (!data.history || data.history.length === 0) {
@@ -8458,6 +8524,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('profileId')) document.getElementById('profileId').value = '';
     if (profileType) profileType.value = 'fisica';
     updateProfileFields();
+    if (document.getElementById('profilePassword')) document.getElementById('profilePassword').required = !firebaseAuthenticated;
+    if (document.getElementById('profileConfirmPassword')) document.getElementById('profileConfirmPassword').required = !firebaseAuthenticated;
     if (profileModal) profileModal.classList.add('active');
   }
 
@@ -8490,12 +8558,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileModal) profileModal.classList.remove('active');
     if (profileForm) profileForm.reset();
     // Restaurar validação de senha
-    if (document.getElementById('profilePassword')) document.getElementById('profilePassword').required = true;
-    if (document.getElementById('profileConfirmPassword')) document.getElementById('profileConfirmPassword').required = true;
+    if (document.getElementById('profilePassword')) document.getElementById('profilePassword').required = !firebaseAuthenticated;
+    if (document.getElementById('profileConfirmPassword')) document.getElementById('profileConfirmPassword').required = !firebaseAuthenticated;
   }
 
   // Salvar perfil
-  function saveProfile() {
+  async function saveProfile() {
     const profileId = document.getElementById('profileId').value;
     const name = document.getElementById('profileName').value.trim();
     const email = document.getElementById('profileEmail').value.trim();
@@ -8520,7 +8588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Se é novo perfil, validar senha
-    if (!profileId) {
+    if (!profileId && !firebaseAuthenticated) {
       if (!password || !confirmPassword) {
         showToast('Preencha os campos de senha.');
         return;
@@ -8550,7 +8618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Verificar senha duplicado (apenas para novos perfis)
-    if (!profileId && password) {
+    if (!profileId && !firebaseAuthenticated && password) {
       const passwordExists = profiles.some(p => p.password === password);
       if (passwordExists) {
         showToast('Esta senha já está em uso. Use uma senha diferente.');
@@ -8576,6 +8644,22 @@ document.addEventListener('DOMContentLoaded', () => {
           currentProfile = profiles[index];
           if (typeof persistAuthenticatedUser === 'function') persistAuthenticatedUser(currentProfile);
         }
+          if (firebaseAuthenticated && String(profileId) === String(currentLocalUser?.id)) {
+            if (email.toLowerCase() !== String(currentLocalUser.email || '').toLowerCase()) {
+              showToast('O e-mail de autenticação deve ser alterado pelo fluxo de verificação do Firebase.');
+              profiles[index].email = currentLocalUser.email;
+              currentProfile.email = currentLocalUser.email;
+            }
+            try {
+              const firebase = await getFirebaseClient();
+              const updatedUser = await firebase.updateDisplayName(name);
+              currentLocalUser = { ...updatedUser, id: updatedUser.uid, name: updatedUser.displayName };
+            } catch (error) {
+              console.error('Não foi possível atualizar o perfil Firebase:', error);
+              showToast(authErrorMessage(error), 'warning');
+              return;
+            }
+          }
         showToast('Perfil atualizado com sucesso!');
       }
     } else {
@@ -8586,7 +8670,6 @@ document.addEventListener('DOMContentLoaded', () => {
         email,
         type,
         doc,
-        password,
         saldo,
         salario,
         despesas: 0,
@@ -8628,6 +8711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveProfiles();
     renderProfiles();
     renderCurrentProfile();
+    if (firebaseAuthenticated) scheduleServerSync();
     if (typeof syncAuthenticatedUserUI === 'function') syncAuthenticatedUserUI();
     closeProfileModalHandler();
     
@@ -8653,7 +8737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem(BASE_STORAGE_KEYS.currentProfileId);
         
         // Limpar dados globais
-        localStorage.removeItem('prisma_recomendacoes_aplicadas');
+        localStorage.removeItem(getScopedStorageKey('prisma_recomendacoes_aplicadas', profileId));
             
         // Recarregar a página para voltar à tela de cadastro
         location.reload();
@@ -8714,7 +8798,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Não foi possível salvar os dados antes do logout:', error);
-      showToast('Não foi possível salvar os dados locais. O logout foi cancelado para evitar perda de informações.', 'warning');
+      if (firebaseAuthenticated && !(await syncServerStateNow())) {
+        throw new Error('Não foi possível sincronizar os dados com o Firestore. O logout foi cancelado para evitar perda de informações.');
+      }
+      if (firebaseAuthenticated) {
+        const firebase = await getFirebaseClient();
+        await firebase.logout();
+      }
+      showToast(error.message || 'Não foi possível salvar os dados antes do logout.', 'warning');
       return;
     }
     cleanLocalUserData();
@@ -8729,9 +8820,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Excluir conta completamente
   async function deleteAccount() {
-    if(!currentProfileId)return;
-    if(!confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão permanentemente excluídos.'))return;
-    try{await apiFetch('/api/account',{method:'DELETE',body:'{}'});localStorage.clear();location.reload()}catch(error){showToast(error.message||'Não foi possível excluir a conta.')}
+    if (!currentProfileId || !firebaseAuthenticated) return;
+    if (!confirm('Tem certeza que deseja excluir sua conta Firebase e os dados salvos na nuvem? Esta ação não pode ser desfeita. As cópias locais deste navegador serão preservadas.')) return;
+    const password = window.prompt('Confirme sua senha para excluir a conta:');
+    if (password === null) return;
+    try {
+      if (!(await syncServerStateNow())) {
+        throw new Error('Não foi possível sincronizar os dados antes da exclusão da conta.');
+      }
+      const firebase = await getFirebaseClient();
+      await firebase.deleteAccount(password);
+      showToast('Conta e dados na nuvem excluídos. As cópias locais foram preservadas.');
+    } catch (error) {
+      console.error('Não foi possível excluir a conta Firebase:', error);
+      showToast(authErrorMessage(error), 'warning');
+    }
   }
 
   // Event listeners
@@ -10878,49 +10981,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
       hideLoginModal();
       hideRegistrationModal();
-
-      const hasValidSession = await restoreLocalSession();
-
-      if (hasValidSession && isAuthenticated) {
-        hideLoginModal();
-        hideRegistrationModal();
-        if (app) app.style.display = 'block';
-        hideWelcomeScreen();
-
-        if (currentProfileId) {
-          loadProfileData(currentProfileId);
+      const firebase = await getFirebaseClient();
+      await firebase.ready;
+      firebaseAuthUnsubscribe = firebase.onUserChanged((user, error) => {
+        if (error) {
+          console.error('Erro ao acompanhar a sessão Firebase:', error);
+          cleanLocalUserData();
+          if (app) app.style.display = 'none';
+          showLoginModal();
+          showAuthFeedback('loginFeedback', authErrorMessage(error), 'error');
+          return;
         }
-
-        renderCartoes();
-        recalculateAll();
-        if (!readLocalConsent(currentLocalUser?.id)) {
-          showLgpdScreen(currentLocalUser);
+        if (!user) {
+          if (!firebaseAuthenticated) return;
+          cleanLocalUserData();
+          if (app) app.style.display = 'none';
+          hideLgpdScreen();
+          showLoginModal();
+          return;
         }
-
-        if (!restoreSectionFromLocation()) {
-          if (typeof window.navigateToSection === 'function') {
-            window.navigateToSection('dashboard', { updateHistory: false });
+        if (firebaseAuthenticated && currentLocalUser?.id === user.uid) return;
+        void activateFirebaseSession(user, firebase).catch(async (error) => {
+          console.error('Não foi possível carregar os dados da conta Firebase:', error);
+          try {
+            await firebase.logout();
+          } catch (logoutError) {
+            console.error('Não foi possível encerrar a sessão após falha ao carregar os dados:', logoutError);
           }
-        }
+          cleanLocalUserData();
+          if (app) app.style.display = 'none';
+          showLoginModal();
+          showAuthFeedback('loginFeedback', authErrorMessage(error), 'error');
+        });
+      });
+
+      const user = await firebase.getCurrentUser();
+      if (user) {
+        await activateFirebaseSession(user, firebase);
       } else {
-        // Sessão não autenticada: limpa estados locais e exibe tela de login
         cleanLocalUserData();
         if (app) app.style.display = 'none';
-        const resetTokenParam = new URLSearchParams(location.search).get('reset_token');
-        if (resetTokenParam && typeof openResetRequest === 'function') {
-          openResetRequest();
-        } else {
-          showLoginModal();
-        }
+        showLoginModal();
+      }
+
+      const actionMode = new URLSearchParams(location.search).get('mode');
+      if (actionMode === 'resetPassword' && typeof resetPasswordModal !== 'undefined') {
+        resetPasswordModal.style.display = 'flex';
+        resetPasswordModal.classList.add('show');
       }
     } catch (error) {
-      console.error('Erro ao inicializar aplicação:', error);
+      console.error('Erro ao inicializar autenticação Firebase:', error);
       cleanLocalUserData();
       const app = document.getElementById('mainApp') || document.querySelector('.app');
       if (app) app.style.display = 'none';
       showLoginModal();
     }
   })();
+      showAuthFeedback('loginFeedback', authErrorMessage(error), 'error');
   
   // ==================== GRAND CARD & FINANCIAL MODULES MANAGER ====================
   window.PrismaFinancialDashboard = (function() {
@@ -11874,13 +11991,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.__currentAiRecommendations = [];
 
   function getAiSavingsPlanKey() {
-    return typeof profileKey === 'function' ? profileKey('prisma_ai_savings_plan') : 'prisma_ai_savings_plan';
+    return getScopedStorageKey('prisma_ai_savings_plan');
   }
 
   function getAiSavingsPlan() {
     let list = getJSONFromStorage(getAiSavingsPlanKey(), null);
     if (list === null) {
-      list = getJSONFromStorage('prisma_recomendacoes_aplicadas', []);
+      list = getJSONFromStorage(getScopedStorageKey('prisma_recomendacoes_aplicadas'), []);
     }
     return Array.isArray(list) ? list : [];
   }
@@ -11888,7 +12005,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function saveAiSavingsPlan(plan) {
     const arr = Array.isArray(plan) ? plan : [];
     setJSONToStorage(getAiSavingsPlanKey(), arr);
-    setJSONToStorage('prisma_recomendacoes_aplicadas', arr);
+    setJSONToStorage(getScopedStorageKey('prisma_recomendacoes_aplicadas'), arr);
     if (typeof scheduleServerSync === 'function') scheduleServerSync();
     if (serverAuthenticated) {
       apiFetch('/api/prisma-ai/plan', {
@@ -11968,6 +12085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.__currentAiRecommendations = recommendations;
 
     // Atualizar UI
+    scheduleServerSync();
     renderAiKpis(analysis, consolidated);
     renderAiDiagnostics(analysis, consolidated);
     renderAiCategoryChart(analysis);

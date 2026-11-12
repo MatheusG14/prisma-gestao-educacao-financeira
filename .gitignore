@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store
+Thumbs.db
+npm-debug.log*
+dist/

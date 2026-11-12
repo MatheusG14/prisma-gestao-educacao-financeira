@@ -8,6 +8,7 @@
    ============================================================= */
 (function () {
   'use strict';
+  const localStorage = window.PrismaStorage || window.localStorage;
 
   /* ── helpers locais ── */
   function $(sel, root) { return (root || document).querySelector(sel); }

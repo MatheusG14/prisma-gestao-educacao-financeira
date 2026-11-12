@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "build:netlify": "node scripts/build-netlify.js",
     "test": "node --test tests/prisma-full-flow.test.js tests/prisma-dashboard-grandcard.test.js tests/prisma-education-pdf-viewer.test.js",
     "test:auth": "node --test tests/prisma-full-flow.test.js",
     "test:audit": "node tests/audit-backend-security.js && node tests/audit-dom-ids.js && node tests/audit-css-files.js && node tests/audit-html-screens.js"
