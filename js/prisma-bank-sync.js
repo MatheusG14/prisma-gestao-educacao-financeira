@@ -23,6 +23,7 @@
  */
 (function (global) {
   'use strict';
+  const localStorage = global.PrismaStorage || global.localStorage;
 
   const PROVIDER_ID = 'mock';
   const MODE = 'sandbox';

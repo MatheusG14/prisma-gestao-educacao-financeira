@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validProfileCreate() {
+      return request.resource.data.keys().hasOnly([
+          'displayName', 'email', 'photoURL', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdAt == request.time;
+    }
+
+    function validProfileUpdate() {
+      return request.resource.data.keys().hasOnly([
+          'displayName', 'email', 'photoURL', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validState() {
+      return request.resource.data.keys().hasOnly([
+          'schemaVersion', 'data', 'revision', 'updatedAt'
+        ])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.data is map
+        && request.resource.data.data.keys().hasOnly([
+          'profile', 'receitas', 'despesas', 'contas', 'cartoes', 'investimentos',
+          'goals', 'categories', 'summary', 'monthlyFlow', 'education',
+          'settings', 'notifications', 'prismaAi'
+        ])
+        && request.resource.data.data.get('profile', {}) is map
+        && request.resource.data.data.get('profile', {}).keys().hasOnly([
+          'id', 'name', 'email', 'type', 'doc', 'saldo', 'salario', 'despesas', 'createdAt'
+        ])
+        && request.resource.data.data.get('receitas', []) is list
+        && request.resource.data.data.get('despesas', []) is list
+        && request.resource.data.data.get('contas', []) is list
+        && request.resource.data.data.get('cartoes', []) is list
+        && request.resource.data.data.get('investimentos', []) is list
+        && request.resource.data.data.get('goals', []) is list
+        && request.resource.data.data.get('categories', []) is list
+        && request.resource.data.data.get('summary', {}) is map
+        && request.resource.data.data.get('monthlyFlow', {}) is map
+        && request.resource.data.data.get('education', {}) is map
+        && request.resource.data.data.get('education', {}).keys().hasOnly([
+          'completed', 'points', 'challengeDone', 'progress'
+        ])
+        && request.resource.data.data.get('settings', {}) is map
+        && request.resource.data.data.get('settings', {}).keys().hasOnly([
+          'categoryBudgets', 'alertsMeta', 'transfers'
+        ])
+        && request.resource.data.data.get('settings', {}).get('categoryBudgets', {}) is map
+        && request.resource.data.data.get('settings', {}).get('alertsMeta', {}) is map
+        && request.resource.data.data.get('settings', {}).get('transfers', []) is list
+        && request.resource.data.data.get('notifications', []) is list
+        && request.resource.data.data.get('prismaAi', {}) is map
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.revision is string;
+    }
+
+    function validConsent() {
+      return request.resource.data.keys().hasOnly([
+          'essentialAccepted', 'communicationsConsent', 'analyticsConsent',
+          'openFinanceConsent', 'updatedAt'
+        ])
+        && request.resource.data.essentialAccepted == true
+        && request.resource.data.communicationsConsent is bool
+        && request.resource.data.analyticsConsent is bool
+        && request.resource.data.openFinanceConsent is bool
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /users/{uid} {
+      allow get: if owns(uid);
+      allow list: if false;
+      allow create: if owns(uid) && validProfileCreate();
+      allow update: if owns(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'email', 'photoURL', 'updatedAt'])
+        && validProfileUpdate();
+      allow delete: if owns(uid);
+
+      match /appData/{documentId} {
+        allow get: if owns(uid);
+        allow list: if false;
+        allow create, update: if owns(uid)
+          && ((documentId == 'state' && validState())
+            || (documentId == 'consent' && validConsent()));
+        allow delete: if owns(uid)
+          && documentId in ['state', 'consent'];
+      }
+
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+  }
+}

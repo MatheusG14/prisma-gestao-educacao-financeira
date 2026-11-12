@@ -4,6 +4,7 @@
    ============================================================ */
 (function () {
   'use strict';
+  const localStorage = window.PrismaStorage || window.localStorage;
 
   const BUDGET_KEY = 'prisma_category_budgets_v1';
   const ALERTS_META_KEY = 'prisma_alerts_meta_v1';
